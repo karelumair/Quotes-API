@@ -70,6 +70,22 @@ async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
 
 [[package]]
+name = "flask-pymongo"
+version = "2.3.0"
+description = "PyMongo support for Flask applications"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Flask-PyMongo-2.3.0.tar.gz", hash = "sha256:620eb02dc8808a5fcb90f26cab6cba9d6bf497b15032ae3ca99df80366e33314"},
+    {file = "Flask_PyMongo-2.3.0-py2.py3-none-any.whl", hash = "sha256:8a9577a2c6d00b49f21cb5a5a8d72561730364a2d745551a85349ab02f86fc73"},
+]
+
+[package.dependencies]
+Flask = ">=0.11"
+PyMongo = ">=3.3"
+
+[[package]]
 name = "itsdangerous"
 version = "2.1.2"
 description = "Safely pass data to untrusted environments and back."
@@ -280,4 +296,4 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "80c84ccfacc1e04898d4f65c6e526ad61d9f0f231daa1c76cbe305bd36bbb07a"
+content-hash = "bb3b774dbb46cfdcb2c5f26f4c0a50360a390ffd4f1b45796876679c1c5fa8d0"
