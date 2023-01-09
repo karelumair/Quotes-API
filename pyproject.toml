@@ -10,6 +10,7 @@ python = "^3.10"
 flask = "^2.2.2"
 python-dotenv = "^0.21.0"
 pymongo = "^4.3.3"
+flask-pymongo = "^2.3.0"
 
 
 [build-system]
