@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "quotes api"
+version = "0.1.0"
+description = ""
+authors = ["karelumair <umair.karel@sarvaha.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^2.2.2"
+python-dotenv = "^0.21.0"
+pymongo = "^4.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
