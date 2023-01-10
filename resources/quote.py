@@ -2,7 +2,7 @@ from flask import Response, request
 from database.models import Quote
 from flask_restful import Resource
 from datetime import datetime
-from utils.utils import cursorToJson
+from utils.utils import cursorToJson, objectToJson
 
 class QuotesApi(Resource):
     def get(self):
@@ -22,14 +22,16 @@ class QuotesApi(Resource):
                 {"$project": {"matchedCount": 0}}
             ]
             cursor = Quote.objects().aggregate(pipeline)
-            quotes = cursorToJson(cursor)
         else:
-            quotes = Quote.objects().to_json()
+            cursor = Quote.objects().as_pymongo()
+
+        quotes = cursorToJson(cursor)
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self):
         body = request.get_json()
-        quote =  Quote(**body).save().to_json()
+        obj =  Quote(**body).save()
+        quote = objectToJson(obj.to_mongo())
         return Response(quote, mimetype="application/json", status=200)
         
 class QuoteApi(Resource):
@@ -44,5 +46,6 @@ class QuoteApi(Resource):
         return '', 200
 
     def get(self, id):
-        quotes = Quote.objects.get(id=id).to_json()
+        obj = Quote.objects.get(id=id)
+        quotes = objectToJson(obj.to_mongo())
         return Response(quotes, mimetype="application/json", status=200)
