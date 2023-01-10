@@ -2,10 +2,29 @@ from flask import Response, request
 from database.models import Quote
 from flask_restful import Resource
 from datetime import datetime
+from utils.utils import cursorToJson
 
 class QuotesApi(Resource):
     def get(self):
-        quotes = Quote.objects().to_json()
+        tags = request.args.get("tags", None)
+        if tags != None:
+            tags = tags.split(",")
+            pipeline = [
+                {"$match": {"tags": {"$in": tags}}},
+                {"$addFields": {
+                    "matchedCount": {
+                        "$size": {
+                            "$setIntersection": [tags, "$tags"]
+                        }
+                    }
+                }},
+                {"$sort": {"matchedCount": -1}},
+                {"$project": {"matchedCount": 0}}
+            ]
+            cursor = Quote.objects().aggregate(pipeline)
+            quotes = cursorToJson(cursor)
+        else:
+            quotes = Quote.objects().to_json()
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self):
