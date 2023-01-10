@@ -5,7 +5,12 @@ from datetime import datetime
 
 class QuotesApi(Resource):
     def get(self):
-        quotes = Quote.objects().to_json()
+        tags = request.args.get("tags", None)
+        if tags != None:
+            tags = tags.split(",")
+            quotes = Quote.objects(__raw__={'tags': {'$all': tags}}).to_json()
+        else:
+            quotes = Quote.objects().to_json()
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self):
