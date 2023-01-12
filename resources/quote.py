@@ -23,29 +23,27 @@ class QuotesApi(Resource):
             ]
             cursor = Quote.objects().aggregate(pipeline)
         else:
-            cursor = Quote.objects().as_pymongo()
+            cursor = Quote.objects()
 
         quotes = cursorToJson(cursor)
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self):
         body = request.get_json()
-        obj =  Quote(**body).save()
-        quote = objectToJson(obj.to_mongo())
-        return Response(quote, mimetype="application/json", status=200)
-        
+        quote =  Quote(**body).save()
+        return Response(quote.to_json(), mimetype="application/json", status=200)
+
 class QuoteApi(Resource):
     def put(self, id):
         body = request.get_json()
         body['updatedOn'] = datetime.utcnow()
         quote = Quote.objects.get(id=id).update(**body)
         return {'id': str(id)}, 200
-    
+
     def delete(self, id):
         quote = Quote.objects.get(id=id).delete()
         return '', 200
 
     def get(self, id):
-        obj = Quote.objects.get(id=id)
-        quotes = objectToJson(obj.to_mongo())
-        return Response(quotes, mimetype="application/json", status=200)
+        obj = Quote.objects.get(id=id).to_json()
+        return Response(obj, mimetype="application/json", status=200)
