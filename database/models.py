@@ -18,7 +18,7 @@ class Author(db.Document):
 
 class Quote(db.Document):
     quote = db.StringField(required=True)
-    quoteBy = db.ReferenceField(Author, reverse_delete_rule=db.CASCADE, dbref=False)
+    author = db.ReferenceField(Author, reverse_delete_rule=db.CASCADE, dbref=False)
     tags = db.ListField(db.StringField(), required=True)
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
@@ -26,5 +26,5 @@ class Quote(db.Document):
 
     def to_json(self):
         obj = self.to_mongo()
-        obj["quoteBy"] = {"name": self.quoteBy.name, "id": self.quoteBy.id}
+        obj["author"] = {"name": self.author.name, "id": self.author.id}
         return objectToJson(obj)
