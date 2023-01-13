@@ -48,7 +48,7 @@ class AuthorApi(Resource):
         try:
             author = Author.objects.get(id=id)
             author.delete()
-            response, status = "", 202
+            response, status = "", 204
         except (DoesNotExist, ValidationError):
             response, status = objectToJson({"Error": "Author with given id Does Not Exist!"}), 404
 

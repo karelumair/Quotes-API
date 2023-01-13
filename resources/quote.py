@@ -60,7 +60,7 @@ class QuoteApi(Resource):
         try:
             quote = Quote.objects.get(id=id)
             quote.delete()
-            response, status = "", 202
+            response, status = "", 204
         except (DoesNotExist, ValidationError):
             response, status = objectToJson({"Error": "Quote with given id Does Not Exist!"}), 404
 
