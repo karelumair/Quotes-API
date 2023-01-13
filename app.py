@@ -11,7 +11,7 @@ import os
 load_dotenv(find_dotenv())
 
 logger = logging.getLogger("app")
-init_logger(logger, os.environ.get("LOG_FILE"))
+init_logger(logger)
 
 app = Flask(__name__)
 app.config["MONGODB_SETTINGS"] = {
