@@ -11,7 +11,7 @@ load_dotenv(find_dotenv())
 
 # Logging Configuration
 logging.basicConfig(filename='logs.log',
-                level=logging.DEBUG, format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+                level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
 
 app = Flask(__name__)
