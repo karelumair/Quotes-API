@@ -4,9 +4,15 @@ from database.db import init_db
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
 from dotenv import load_dotenv, find_dotenv
+import logging
 import os
 
 load_dotenv(find_dotenv())
+
+# Logging Configuration
+logging.basicConfig(filename='logs.log',
+                level=logging.DEBUG, format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+
 
 app = Flask(__name__)
 app.config["MONGODB_SETTINGS"] = {
