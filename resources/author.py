@@ -7,11 +7,21 @@ from utils.utils import cursorToJson, objectToJson
 
 class AuthorsApi(Resource):
     def get(self) -> Response:
+        """Get all the Authors
+
+        Returns:
+            Response: JSON object of all the Authors
+        """
         cursor = Author.objects()
         authors = cursorToJson(cursor)
         return Response(authors, mimetype="application/json", status=200)
 
     def post(self) -> Response:
+        """Create new Author
+
+        Returns:
+            Response: JSON object of created Author
+        """
         try:
             body = request.get_json()
             author = Author(**body)
@@ -24,6 +34,14 @@ class AuthorsApi(Resource):
 
 class AuthorApi(Resource):
     def get(self, id: str) -> Response:
+        """Get single Author with given id
+
+        Args:
+            id (str): Author id
+
+        Returns:
+            Response: JSON object of Author
+        """
         try:
             response, status = Author.objects.get(id=id).to_json(), 200
         except (DoesNotExist, ValidationError):
@@ -32,6 +50,14 @@ class AuthorApi(Resource):
         return Response(response, mimetype="application/json", status=status)
 
     def put(self, id: str) -> Response:
+        """Update single Author with given id
+
+        Args:
+            id (str): Author id
+
+        Returns:
+            Response: JSON object of created Author
+        """
         try:
             body = request.get_json()
             body['updatedOn'] = datetime.utcnow()
@@ -45,6 +71,14 @@ class AuthorApi(Resource):
         return Response(objectToJson(response), mimetype="application/json", status=status)
 
     def delete(self, id: str) -> Response:
+        """Delete single Author with given id
+
+        Args:
+            id (str): Author id
+
+        Returns:
+            Response: Empty
+        """
         try:
             author = Author.objects.get(id=id)
             author.delete()

@@ -7,6 +7,11 @@ from utils.utils import cursorToJson, objectToJson
 
 class QuotesApi(Resource):
     def get(self) -> Response:
+        """Get all the Quotes
+
+        Returns:
+            Response: JSON object of all the Quotes
+        """
         tags = request.args.get("tags", None)
         if tags != None:
             tags = tags.split(",")
@@ -30,6 +35,11 @@ class QuotesApi(Resource):
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self) -> Response:
+        """Create new Quote
+
+        Returns:
+            Response: JSON object of created Quote
+        """
         try:
             body = request.get_json()
             quote =  Quote(**body)
@@ -44,6 +54,14 @@ class QuotesApi(Resource):
 
 class QuoteApi(Resource):
     def put(self, id: str) -> Response:
+        """Update single Quote with given id
+
+        Args:
+            id (str): Quote id
+
+        Returns:
+            Response: JSON object of Quote
+        """
         try:
             body = request.get_json()
             body['updatedOn'] = datetime.utcnow()
@@ -57,6 +75,14 @@ class QuoteApi(Resource):
         return Response(objectToJson(response), mimetype="application/json", status=status)
 
     def delete(self, id: str) -> Response:
+        """Delete single Quote with given id
+
+        Args:
+            id (str): Quote id
+
+        Returns:
+            Response: Empty
+        """
         try:
             quote = Quote.objects.get(id=id)
             quote.delete()
@@ -67,6 +93,14 @@ class QuoteApi(Resource):
         return Response(response, mimetype="application/json", status=status)
 
     def get(self, id: str) -> Response:
+        """Get single Quote with given id
+
+        Args:
+            id (str): Quote id
+
+        Returns:
+            Response: JSON object of Quote
+        """
         try:
             response, status = Quote.objects.get(id=id).to_json(), 200
         except (DoesNotExist, ValidationError):
