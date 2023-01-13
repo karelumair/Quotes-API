@@ -1,4 +1,5 @@
 from flask import Response, request
+from mongoengine.errors import DoesNotExist, ValidationError
 from database.models import Quote
 from flask_restful import Resource
 from datetime import datetime
@@ -29,21 +30,46 @@ class QuotesApi(Resource):
         return Response(quotes, mimetype="application/json", status=200)
 
     def post(self):
-        body = request.get_json()
-        quote =  Quote(**body).save()
-        return Response(quote.to_json(), mimetype="application/json", status=200)
+        try:
+            body = request.get_json()
+            quote =  Quote(**body)
+            quote.save()
+            response, status = quote.to_json(), 201
+        except DoesNotExist:
+            response, status = objectToJson({"Error": "Author id Does Not Exist!"}), 404
+        except Exception as e:
+            response, status = objectToJson({"Error": str(e)}), 400
+
+        return Response(response, mimetype="application/json", status=status)
 
 class QuoteApi(Resource):
     def put(self, id):
-        body = request.get_json()
-        body['updatedOn'] = datetime.utcnow()
-        quote = Quote.objects.get(id=id).update(**body)
-        return {'id': str(id)}, 200
+        try:
+            body = request.get_json()
+            body['updatedOn'] = datetime.utcnow()
+            quote = Quote.objects.get(id=id).update(**body)
+            response, status = {'id': str(id)}, 200
+        except DoesNotExist:
+            response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
+        except Exception as e:
+            response, status = {"Error": str(e)}, 400
+
+        return Response(objectToJson(response), mimetype="application/json", status=status)
 
     def delete(self, id):
-        quote = Quote.objects.get(id=id).delete()
-        return '', 200
+        try:
+            quote = Quote.objects.get(id=id)
+            quote.delete()
+            response, status = "", 202
+        except (DoesNotExist, ValidationError):
+            response, status = objectToJson({"Error": "Quote with given id Does Not Exist!"}), 404
+
+        return Response(response, mimetype="application/json", status=status)
 
     def get(self, id):
-        obj = Quote.objects.get(id=id).to_json()
-        return Response(obj, mimetype="application/json", status=200)
+        try:
+            response, status = Quote.objects.get(id=id).to_json(), 200
+        except (DoesNotExist, ValidationError):
+            response, status = objectToJson({"Error": "Quote with given id Does Not Exist!"}), 404
+
+        return Response(response, mimetype="application/json", status=status)
