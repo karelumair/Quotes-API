@@ -6,12 +6,12 @@ from database.models import Author
 from utils.utils import cursorToJson, objectToJson
 
 class AuthorsApi(Resource):
-    def get(self):
+    def get(self) -> Response:
         cursor = Author.objects()
         authors = cursorToJson(cursor)
         return Response(authors, mimetype="application/json", status=200)
 
-    def post(self):
+    def post(self) -> Response:
         try:
             body = request.get_json()
             author = Author(**body)
@@ -23,7 +23,7 @@ class AuthorsApi(Resource):
         return Response(response, mimetype="application/json", status=status)
 
 class AuthorApi(Resource):
-    def get(self, id):
+    def get(self, id: str) -> Response:
         try:
             response, status = Author.objects.get(id=id).to_json(), 200
         except (DoesNotExist, ValidationError):
@@ -31,7 +31,7 @@ class AuthorApi(Resource):
 
         return Response(response, mimetype="application/json", status=status)
 
-    def put(self, id):
+    def put(self, id: str) -> Response:
         try:
             body = request.get_json()
             body['updatedOn'] = datetime.utcnow()
@@ -44,7 +44,7 @@ class AuthorApi(Resource):
 
         return Response(objectToJson(response), mimetype="application/json", status=status)
 
-    def delete(self, id):
+    def delete(self, id: str) -> Response:
         try:
             author = Author.objects.get(id=id)
             author.delete()
