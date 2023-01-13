@@ -6,7 +6,7 @@ from datetime import datetime
 from utils.utils import cursorToJson, objectToJson
 
 class QuotesApi(Resource):
-    def get(self):
+    def get(self) -> Response:
         tags = request.args.get("tags", None)
         if tags != None:
             tags = tags.split(",")
@@ -29,7 +29,7 @@ class QuotesApi(Resource):
         quotes = cursorToJson(cursor)
         return Response(quotes, mimetype="application/json", status=200)
 
-    def post(self):
+    def post(self) -> Response:
         try:
             body = request.get_json()
             quote =  Quote(**body)
@@ -43,7 +43,7 @@ class QuotesApi(Resource):
         return Response(response, mimetype="application/json", status=status)
 
 class QuoteApi(Resource):
-    def put(self, id):
+    def put(self, id: str) -> Response:
         try:
             body = request.get_json()
             body['updatedOn'] = datetime.utcnow()
@@ -56,7 +56,7 @@ class QuoteApi(Resource):
 
         return Response(objectToJson(response), mimetype="application/json", status=status)
 
-    def delete(self, id):
+    def delete(self, id: str) -> Response:
         try:
             quote = Quote.objects.get(id=id)
             quote.delete()
@@ -66,7 +66,7 @@ class QuoteApi(Resource):
 
         return Response(response, mimetype="application/json", status=status)
 
-    def get(self, id):
+    def get(self, id: str) -> Response:
         try:
             response, status = Quote.objects.get(id=id).to_json(), 200
         except (DoesNotExist, ValidationError):
