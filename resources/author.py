@@ -1,4 +1,5 @@
 from flask import request, Response
+from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from datetime import datetime
 from database.models import Author
@@ -11,22 +12,44 @@ class AuthorsApi(Resource):
         return Response(authors, mimetype="application/json", status=200)
 
     def post(self):
-        body = request.get_json()
-        author = Author(**body).save()
-        return Response(author.to_json(), mimetype="application/json", status=200)
+        try:
+            body = request.get_json()
+            author = Author(**body)
+            author.save()
+            response, status = author.to_json(), 201
+        except Exception as e:
+            response, status = objectToJson({"Error": str(e)}), 400
+
+        return Response(response, mimetype="application/json", status=status)
 
 class AuthorApi(Resource):
     def get(self, id):
-        author = Author.objects.get(id=id)
-        return Response(author.to_json(), mimetype="application/json", status=200)
+        try:
+            response, status = Author.objects.get(id=id).to_json(), 200
+        except (DoesNotExist, ValidationError):
+            response, status = objectToJson({"Error": "Author with given id Does Not Exist!"}), 404
+
+        return Response(response, mimetype="application/json", status=status)
 
     def put(self, id):
-        print("PUT")
-        body = request.get_json()
-        body['updatedOn'] = datetime.utcnow()
-        author = Author.objects.get(id=id).update(**body)
-        return {'id': str(id)}, 200
+        try:
+            body = request.get_json()
+            body['updatedOn'] = datetime.utcnow()
+            author = Author.objects.get(id=id).update(**body)
+            response, status = {'id': str(id)}, 200
+        except DoesNotExist:
+            response, status = {"Error": "Author with given id Does Not Exist!"}, 404
+        except Exception as e:
+            response, status = {"Error": str(e)}, 400
+
+        return Response(objectToJson(response), mimetype="application/json", status=status)
 
     def delete(self, id):
-        Author.objects.get(id=id).delete()
-        return '', 200
+        try:
+            author = Author.objects.get(id=id)
+            author.delete()
+            response, status = "", 204
+        except (DoesNotExist, ValidationError):
+            response, status = objectToJson({"Error": "Author with given id Does Not Exist!"}), 404
+
+        return Response(response, mimetype="application/json", status=status)
