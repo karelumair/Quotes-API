@@ -1,11 +1,11 @@
 import datetime
 from utils.utils import objectToJson
-from .db import db
+from database.db import db
 
 
 class Author(db.Document):
     name = db.StringField(required=True)
-    DOB = db.DateTimeField(required=True)
+    dob = db.DateTimeField(required=True)
     country = db.StringField(required=True)
     description = db.StringField(required=True)
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
