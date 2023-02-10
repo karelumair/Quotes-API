@@ -5,7 +5,7 @@ from flask_restful import Resource
 from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes
 from utils.utils import object_to_json
-import app_constants
+from constants import app_constants
 
 
 class ScrapeApi(Resource):
