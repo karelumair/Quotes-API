@@ -1,6 +1,7 @@
 """Utility for json conversion and selenium setup"""
 
 import os
+import datetime
 import json
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -29,6 +30,18 @@ def object_to_json(obj):
         json: json object
     """
     return json.dumps(obj, default=str)
+
+
+def get_date(date):
+    """convert to datetime object
+
+    Args:
+        date (string): date in string
+
+    Returns:
+        datetime: datetime object
+    """
+    return datetime.datetime.strptime(date, "%B %d, %Y")
 
 
 def init_driver():

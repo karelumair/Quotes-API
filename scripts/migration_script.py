@@ -2,18 +2,7 @@
 
 import datetime
 from database.models import Quote, Author
-
-
-def get_date(date):
-    """convert to datetime object
-
-    Args:
-        date (string): date in string
-
-    Returns:
-        datetime: datetime object
-    """
-    return datetime.datetime.strptime(date, "%B %d, %Y")
+from utils.utils import get_date
 
 
 authors = [
