@@ -1,7 +1,7 @@
 """Utility for scraping quotes data"""
 
 from selenium.webdriver.common.by import By
-from utils.utils import init_driver
+from utils.utils import init_driver, get_date
 
 
 def scrape_quotes(url) -> list:
@@ -25,11 +25,7 @@ def scrape_quotes(url) -> list:
             quote = quote_div.find_element(By.CLASS_NAME, "text").text
             author_name = quote_div.find_element(By.CLASS_NAME, "author").text
             author_link = quote_div.find_element(By.TAG_NAME, "a").get_attribute("href")
-            tags = []
-
-            for tag in quote_div.find_elements(By.CLASS_NAME, "tag"):
-                tags.append(tag.text)
-
+            tags = [tag.text for tag in quote_div.find_elements(By.CLASS_NAME, "tag")]
             data = {
                 "quote": quote,
                 "author": {"name": author_name, "link": author_link},
@@ -49,3 +45,31 @@ def scrape_quotes(url) -> list:
 
     driver.quit()
     return quotes_data
+
+
+def scrape_author(url) -> dict:
+    """This function scrape authors data
+
+    Args:
+        url (str): link of the website to be scraped
+
+    Returns:
+        dict: dict of author data scraped
+    """
+    driver = init_driver()
+    driver.get(url)
+
+    name = driver.find_element(By.CLASS_NAME, "author-title").text
+    dob = driver.find_element(By.CLASS_NAME, "author-born-date").text
+    country = driver.find_element(By.CLASS_NAME, "author-born-location").text[3:]
+    description = driver.find_element(By.CLASS_NAME, "author-description").text
+
+    author_data = {
+        "name": name,
+        "dob": get_date(dob),
+        "country": country,
+        "description": description,
+    }
+
+    driver.quit()
+    return author_data
