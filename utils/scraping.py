@@ -1,12 +1,10 @@
-import os
-from selenium import webdriver
+"""Utility for scraping quotes data"""
+
 from selenium.webdriver.common.by import By
-
-SELENIUM_DRIVER = os.environ.get("SELENIUM_DRIVER")
-driver = webdriver.Firefox(executable_path=SELENIUM_DRIVER)
+from utils.utils import init_driver
 
 
-def scrapeQuotes(url) -> list:
+def scrape_quotes(url) -> list:
     """This function scrape quotes data
 
     Args:
@@ -15,7 +13,7 @@ def scrapeQuotes(url) -> list:
     Returns:
         list: list of quotes data scraped
     """
-
+    driver = init_driver()
     driver.get(url)
 
     quotes_data = []
@@ -46,7 +44,7 @@ def scrapeQuotes(url) -> list:
 
             a_link = next_li.find_element(By.TAG_NAME, "a")
             a_link.click()
-        except:
+        except (Exception,):
             next_page = False
 
     driver.quit()

@@ -1,3 +1,5 @@
+"""Utility for logging activities"""
+
 import os
 import logging
 

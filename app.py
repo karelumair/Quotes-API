@@ -1,3 +1,5 @@
+"""Main Application"""
+
 import logging
 import os
 from flask import Flask
@@ -27,9 +29,9 @@ init_db(app)
 # Routes
 api = Api(app)
 api.add_resource(QuotesApi, "/quotes/")
-api.add_resource(QuoteApi, "/quotes/<id>/")
+api.add_resource(QuoteApi, "/quotes/<quote_id>/")
 api.add_resource(AuthorsApi, "/authors/")
-api.add_resource(AuthorApi, "/authors/<id>/")
+api.add_resource(AuthorApi, "/authors/<author_id>/")
 api.add_resource(ScrapeApi, "/scrape/")
 
 
