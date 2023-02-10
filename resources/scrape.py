@@ -5,7 +5,7 @@ from flask_restful import Resource
 from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes
 from utils.utils import object_to_json
-from constants import app_constants
+from constants.app_constants import QUOTES_URL
 
 
 class ScrapeApi(Resource):
@@ -18,7 +18,7 @@ class ScrapeApi(Resource):
             Response: JSON object of message success
         """
         try:
-            quotes = scrape_quotes(app_constants.QUOTES_URL)
+            quotes = scrape_quotes(QUOTES_URL)
 
             for quote in quotes:
                 author = ScrapedAuthor(**quote.pop("author"))
