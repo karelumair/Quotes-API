@@ -6,7 +6,7 @@ from database.db import db
 
 
 class Author(db.Document):
-    """_Author Model"""
+    """Author Model"""
 
     name = db.StringField(required=True)
     dob = db.DateTimeField(required=True)

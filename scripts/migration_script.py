@@ -1,4 +1,4 @@
-"""Utility for Database Migration"""
+"""Script for Database Migration"""
 
 import datetime
 from database.models import Quote, Author

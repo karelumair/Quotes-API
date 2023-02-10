@@ -2,10 +2,10 @@
 
 from flask import Response, current_app
 from flask_restful import Resource
-from database.models import ScrapedAuthor
-from database.models import Quote
+from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes
 from utils.utils import object_to_json
+import app_constants
 
 
 class ScrapeApi(Resource):
@@ -18,7 +18,7 @@ class ScrapeApi(Resource):
             Response: JSON object of message success
         """
         try:
-            quotes = scrape_quotes("https://quotes.toscrape.com/")
+            quotes = scrape_quotes(app_constants.QUOTES_URL)
 
             for quote in quotes:
                 author = ScrapedAuthor(**quote.pop("author"))

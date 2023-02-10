@@ -44,7 +44,7 @@ def scrape_quotes(url) -> list:
 
             a_link = next_li.find_element(By.TAG_NAME, "a")
             a_link.click()
-        except (Exception,):
+        except Exception:
             next_page = False
 
     driver.quit()
