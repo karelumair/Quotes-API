@@ -4,8 +4,10 @@ from datetime import datetime
 from flask import request, Response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
+from flask_expects_json import expects_json
 from database.models import Author
 from utils.utils import cursor_to_json, object_to_json
+from validation.schemas import AUTHOR_SCHEMA, AUTHOR_REQUIRED_FIELDS
 
 
 class AuthorsApi(Resource):
@@ -22,6 +24,7 @@ class AuthorsApi(Resource):
         current_app.logger.info("GET Authors")
         return Response(authors, mimetype="application/json", status=200)
 
+    @expects_json({**AUTHOR_SCHEMA, "required": AUTHOR_REQUIRED_FIELDS})
     def post(self) -> Response:
         """Create new Author
 
@@ -65,6 +68,7 @@ class AuthorApi(Resource):
 
         return Response(response, mimetype="application/json", status=status)
 
+    @expects_json(AUTHOR_SCHEMA)
     def put(self, author_id: str) -> Response:
         """Update single Author with given id
 

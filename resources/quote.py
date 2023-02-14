@@ -4,8 +4,10 @@ from datetime import datetime
 from flask import Response, request, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
+from flask_expects_json import expects_json
 from database.models import Quote
 from utils.utils import cursor_to_json, object_to_json
+from validation.schemas import QUOTE_SCHEMA, QUOTE_REQUIRED_FIELDS
 
 
 class QuotesApi(Resource):
@@ -39,6 +41,7 @@ class QuotesApi(Resource):
         quotes = cursor_to_json(cursor)
         return Response(quotes, mimetype="application/json", status=200)
 
+    @expects_json({**QUOTE_SCHEMA, "required": QUOTE_REQUIRED_FIELDS})
     def post(self) -> Response:
         """Create new Quote
 
@@ -67,6 +70,7 @@ class QuotesApi(Resource):
 class QuoteApi(Resource):
     """GET Detail, PUT, and DELETE API for Quotes"""
 
+    @expects_json(QUOTE_SCHEMA)
     def put(self, quote_id: str) -> Response:
         """Update single Quote with given id
 
