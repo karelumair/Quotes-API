@@ -1,7 +1,11 @@
 """Utility for scraping quotes data"""
 
+import requests
+from bs4 import BeautifulSoup
+from celery import shared_task
 from selenium.webdriver.common.by import By
 from utils.utils import init_driver, get_date
+from database.models import ScrapedAuthor
 
 
 def scrape_quotes(url) -> list:
@@ -47,29 +51,30 @@ def scrape_quotes(url) -> list:
     return quotes_data
 
 
-def scrape_author(url) -> dict:
+@shared_task
+def scrape_authors() -> bool:
     """This function scrape authors data
 
     Args:
         url (str): link of the website to be scraped
 
     Returns:
-        dict: dict of author data scraped
+        bool: returns status true
     """
-    driver = init_driver()
-    driver.get(url)
+    for author in ScrapedAuthor.objects():
+        res = requests.get(author.link, timeout=10)
+        soup = BeautifulSoup(res.content, features="html5lib")
 
-    name = driver.find_element(By.CLASS_NAME, "author-title").text
-    dob = driver.find_element(By.CLASS_NAME, "author-born-date").text
-    country = driver.find_element(By.CLASS_NAME, "author-born-location").text[3:]
-    description = driver.find_element(By.CLASS_NAME, "author-description").text
+        dob = soup.find(class_="author-born-date").text
+        country = soup.find(class_="author-born-location").text[3:]
+        description = soup.find(class_="author-description").text.strip()
 
-    author_data = {
-        "name": name,
-        "dob": get_date(dob),
-        "country": country,
-        "description": description,
-    }
+        author_data = {
+            "dob": get_date(dob),
+            "country": country,
+            "description": description,
+        }
 
-    driver.quit()
-    return author_data
+        author.update(**author_data)
+
+    return True
