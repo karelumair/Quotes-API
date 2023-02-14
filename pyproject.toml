@@ -20,9 +20,11 @@ beautifulsoup4 = "^4.11.2"
 requests = "^2.28.2"
 html5lib = "^1.1"
 flask-expects-json = "^1.7.0"
+celery = "^5.2.7"
+redis = "^4.5.1"
 
 [tool.pylint.messages_control]
-disable = "E1101, W0703, C0301"
+disable = "E1101, W0703, C0301, W0223"
 
 
 [build-system]
