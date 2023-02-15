@@ -6,8 +6,8 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from flask_expects_json import expects_json
 from database.models import Author
+from database.schemas import AUTHOR_SCHEMA, AUTHOR_REQUIRED_FIELDS
 from utils.utils import cursor_to_json, object_to_json
-from validation.schemas import AUTHOR_SCHEMA, AUTHOR_REQUIRED_FIELDS
 
 
 class AuthorsApi(Resource):
