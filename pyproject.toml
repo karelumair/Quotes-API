@@ -22,9 +22,11 @@ html5lib = "^1.1"
 flask-expects-json = "^1.7.0"
 celery = "^5.2.7"
 redis = "^4.5.1"
+pydantic = "^1.10.4"
+flask-pydantic = "^0.11.0"
 
 [tool.pylint.messages_control]
-disable = "E1101, W0703, C0301, W0223, W0613"
+disable = "E1101, E0611, W0703, C0301, W0223, W0613, R0903"
 
 
 [build-system]
