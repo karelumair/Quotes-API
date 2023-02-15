@@ -4,9 +4,8 @@ from datetime import datetime
 from flask import Response, request, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
-from flask_expects_json import expects_json
 from database.models import Quote
-from database.schemas import QUOTE_SCHEMA, QUOTE_REQUIRED_FIELDS
+from database.schemas import QuoteSchema, QuoteUpdateSchema
 from utils.utils import cursor_to_json, object_to_json
 
 
@@ -41,7 +40,6 @@ class QuotesApi(Resource):
         quotes = cursor_to_json(cursor)
         return Response(quotes, mimetype="application/json", status=200)
 
-    @expects_json({**QUOTE_SCHEMA, "required": QUOTE_REQUIRED_FIELDS})
     def post(self) -> Response:
         """Create new Quote
 
@@ -51,6 +49,8 @@ class QuotesApi(Resource):
         try:
             body = request.get_json()
             quote = Quote(**body)
+            quote_validate = QuoteSchema(**body)
+            quote = Quote(**quote_validate.dict())
             quote.save()
             response, status = quote.to_json(), 201
             current_app.logger.info(f"POST Quote {quote.id}")
@@ -70,7 +70,6 @@ class QuotesApi(Resource):
 class QuoteApi(Resource):
     """GET Detail, PUT, and DELETE API for Quotes"""
 
-    @expects_json(QUOTE_SCHEMA)
     def put(self, quote_id: str) -> Response:
         """Update single Quote with given id
 
@@ -83,7 +82,13 @@ class QuoteApi(Resource):
         try:
             body = request.get_json()
             body["updatedOn"] = datetime.utcnow()
-            Quote.objects.get(id=quote_id).update(**body)
+
+            quote_validate = QuoteUpdateSchema(**body)
+            update_values = {
+                k: v for k, v in quote_validate.dict().items() if v is not None
+            }
+            Quote.objects.get(id=quote_id).update(**update_values)
+
             response, status = {"id": str(quote_id)}, 200
             current_app.logger.info(f"GET Quote {quote_id}")
         except DoesNotExist:

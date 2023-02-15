@@ -26,8 +26,8 @@ app = Flask(__name__)
 app.config["MONGODB_SETTINGS"] = {"host": MONGO_URI}
 app.config.from_mapping(
     CELERY={
-        "broker_url": "redis://localhost",
-        "result_backend": "redis://localhost",
+        "broker_url": CELERY_BROKER_URL,
+        "result_backend": CELERY_BROKER_URL,
     }
 )
 

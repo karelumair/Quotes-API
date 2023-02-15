@@ -4,9 +4,8 @@ from datetime import datetime
 from flask import request, Response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
-from flask_expects_json import expects_json
 from database.models import Author
-from database.schemas import AUTHOR_SCHEMA, AUTHOR_REQUIRED_FIELDS
+from database.schemas import AuthorSchema, AuthorUpdateSchema
 from utils.utils import cursor_to_json, object_to_json
 
 
@@ -24,7 +23,6 @@ class AuthorsApi(Resource):
         current_app.logger.info("GET Authors")
         return Response(authors, mimetype="application/json", status=200)
 
-    @expects_json({**AUTHOR_SCHEMA, "required": AUTHOR_REQUIRED_FIELDS})
     def post(self) -> Response:
         """Create new Author
 
@@ -33,7 +31,8 @@ class AuthorsApi(Resource):
         """
         try:
             body = request.get_json()
-            author = Author(**body)
+            author_validate = AuthorSchema(**body)
+            author = Author(**author_validate.dict())
             author.save()
             response, status = author.to_json(), 201
             current_app.logger.info(f"POST Author {author.id}")
@@ -68,7 +67,6 @@ class AuthorApi(Resource):
 
         return Response(response, mimetype="application/json", status=status)
 
-    @expects_json(AUTHOR_SCHEMA)
     def put(self, author_id: str) -> Response:
         """Update single Author with given id
 
@@ -81,7 +79,13 @@ class AuthorApi(Resource):
         try:
             body = request.get_json()
             body["updatedOn"] = datetime.utcnow()
-            Author.objects.get(id=author_id).update(**body)
+
+            author_validate = AuthorUpdateSchema(**body)
+            update_values = {
+                k: v for k, v in author_validate.dict().items() if v is not None
+            }
+            Author.objects.get(id=author_id).update(**update_values)
+
             response, status = {"id": str(author_id)}, 200
             current_app.logger.info(f"PUT Author {author_id}")
         except DoesNotExist:
