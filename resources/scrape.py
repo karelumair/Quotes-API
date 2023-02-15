@@ -86,7 +86,9 @@ class ScrapeStatus(Resource):
             tuple: JSON and status code
         """
         task_result = AsyncResult(task_id)
-        result = {
-            "task_status": task_result.status,
-        }
+        result = {"task_status": "Task id does not exists"}
+        if task_result.status != "PENDING":
+            result = {
+                "task_status": task_result.status,
+            }
         return result, 200
