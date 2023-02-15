@@ -6,7 +6,7 @@ from flask import Flask
 from flask_restful import Api
 from dotenv import load_dotenv, find_dotenv
 from database.db import init_db
-from database.error_handler import bad_request, error_handler_blueprint
+from resources.error_handler import bad_request, error_handler_blueprint
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeQuotesApi, ScrapeAuthorsApi, ScrapeStatus
