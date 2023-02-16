@@ -1,7 +1,6 @@
 """All the Data Models"""
 
 import datetime
-from utils.utils import object_to_json
 from database.db import db
 
 
@@ -17,8 +16,9 @@ class Author(db.Document):
     meta = {"collection": "authors"}
 
     def to_json(self, *args, **kwargs):
-        obj = self.to_mongo()
-        return object_to_json(obj)
+        obj = self.to_mongo().to_dict()
+        obj["_id"] = str(obj["_id"])
+        return obj
 
 
 class ScrapedAuthor(db.Document):
@@ -34,8 +34,9 @@ class ScrapedAuthor(db.Document):
     meta = {"collection": "scrapedAuthors"}
 
     def to_json(self, *args, **kwargs):
-        obj = self.to_mongo()
-        return object_to_json(obj)
+        obj = self.to_mongo().to_dict()
+        obj["_id"] = str(obj["_id"])
+        return obj
 
 
 class Quote(db.Document):
@@ -52,6 +53,7 @@ class Quote(db.Document):
     meta = {"collection": "quotes"}
 
     def to_json(self, *args, **kwargs):
-        obj = self.to_mongo()
-        obj["author"] = {"name": self.author.name, "id": self.author.id}
-        return object_to_json(obj)
+        obj = self.to_mongo().to_dict()
+        obj["_id"] = str(obj["_id"])
+        obj["author"] = {"name": self.author.name, "id": str(self.author.id)}
+        return obj
