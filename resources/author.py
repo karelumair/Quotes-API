@@ -6,7 +6,7 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from database.models import Author
 from database.schemas import AuthorSchema, AuthorUpdateSchema
-from utils.utils import cursor_to_json, object_to_json
+from utils.utils import cursor_to_json
 
 
 class AuthorsApi(Resource):
@@ -37,7 +37,7 @@ class AuthorsApi(Resource):
             response, status = author.to_json(), 201
             current_app.logger.info(f"POST Author {author.id}")
         except Exception as exp_err:
-            response, status = object_to_json({"Error": str(exp_err)}), 400
+            response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"POST Author {str(exp_err)}")
 
         return make_response(jsonify(response), status)
@@ -59,10 +59,7 @@ class AuthorApi(Resource):
             response, status = Author.objects.get(id=author_id).to_json(), 200
             current_app.logger.info(f"GET Author {author_id}")
         except (DoesNotExist, ValidationError):
-            response, status = (
-                object_to_json({"Error": "Author with given id Does Not Exist!"}),
-                404,
-            )
+            response, status = {"Error": "Author with given id Does Not Exist!"}, 404
             current_app.logger.error(f"GET Author {author_id} not found")
 
         return make_response(jsonify(response), status)
@@ -112,10 +109,7 @@ class AuthorApi(Resource):
             response, status = "", 204
             current_app.logger.info(f"DELETE Author {author.id}")
         except (DoesNotExist, ValidationError):
-            response, status = (
-                object_to_json({"Error": "Author with given id Does Not Exist!"}),
-                404,
-            )
+            response, status = {"Error": "Author with given id Does Not Exist!"}, 404
             current_app.logger.error(f"DELETE Author {author_id} not found")
 
         return make_response(jsonify(response), status)

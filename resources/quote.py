@@ -6,7 +6,7 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from database.models import Quote
 from database.schemas import QuoteSchema, QuoteUpdateSchema
-from utils.utils import cursor_to_json, object_to_json
+from utils.utils import cursor_to_json
 
 
 class QuotesApi(Resource):
@@ -55,13 +55,10 @@ class QuotesApi(Resource):
             response, status = quote.to_json(), 201
             current_app.logger.info(f"POST Quote {quote.id}")
         except DoesNotExist:
-            response, status = (
-                object_to_json({"Error": "Author id Does Not Exist!"}),
-                404,
-            )
+            response, status = {"Error": "Author id Does Not Exist!"}, 404
             current_app.logger.error("GET Quote: Author not found")
         except Exception as exp_err:
-            response, status = object_to_json({"Error": str(exp_err)}), 400
+            response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"POST Quote {str(exp_err)}")
 
         return make_response(jsonify(response), status)
@@ -115,10 +112,7 @@ class QuoteApi(Resource):
             response, status = "", 204
             current_app.logger.info(f"DELETE Quote {quote_id}")
         except (DoesNotExist, ValidationError):
-            response, status = (
-                object_to_json({"Error": "Quote with given id Does Not Exist!"}),
-                404,
-            )
+            response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
             current_app.logger.error(f"DELETE Quote {quote_id} not found")
 
         return make_response(jsonify(response), status)
@@ -136,10 +130,7 @@ class QuoteApi(Resource):
             response, status = Quote.objects.get(id=quote_id).to_json(), 200
             current_app.logger.info(f"GET Quote {quote_id}")
         except (DoesNotExist, ValidationError):
-            response, status = (
-                object_to_json({"Error": "Quote with given id Does Not Exist!"}),
-                404,
-            )
+            response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
             current_app.logger.error(f"GET Quote {quote_id} not found")
 
         return make_response(jsonify(response), status)
