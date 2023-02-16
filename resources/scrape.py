@@ -1,11 +1,10 @@
 """All the Scrape API endpoints"""
 
-from flask import Response, current_app
+from flask import make_response, jsonify, current_app
 from flask_restful import Resource
 from celery.result import AsyncResult
 from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes, scrape_authors
-from utils.utils import object_to_json
 from constants.app_constants import QUOTES_URL
 
 
@@ -42,9 +41,7 @@ class ScrapeQuotesApi(Resource):
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"Scrape {str(exp_err)}")
 
-        return Response(
-            object_to_json(response), mimetype="application/json", status=status
-        )
+        return make_response(jsonify(response), status)
 
 
 class ScrapeAuthorsApi(Resource):
@@ -68,9 +65,7 @@ class ScrapeAuthorsApi(Resource):
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"Scrape {str(exp_err)}")
 
-        return Response(
-            object_to_json(response), mimetype="application/json", status=status
-        )
+        return make_response(jsonify(response), status)
 
 
 class ScrapeStatus(Resource):
@@ -91,4 +86,4 @@ class ScrapeStatus(Resource):
             result = {
                 "task_status": task_result.status,
             }
-        return result, 200
+        return make_response(jsonify(result), 200)
