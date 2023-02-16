@@ -1,7 +1,7 @@
 """All the Authors API endpoints"""
 
 from datetime import datetime
-from flask import request, Response, current_app
+from flask import request, Response, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from database.models import Author
@@ -21,7 +21,7 @@ class AuthorsApi(Resource):
         cursor = Author.objects()
         authors = cursor_to_json(cursor)
         current_app.logger.info("GET Authors")
-        return Response(authors, mimetype="application/json", status=200)
+        return make_response(jsonify(authors), 200)
 
     def post(self) -> Response:
         """Create new Author
@@ -40,7 +40,7 @@ class AuthorsApi(Resource):
             response, status = object_to_json({"Error": str(exp_err)}), 400
             current_app.logger.error(f"POST Author {str(exp_err)}")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)
 
 
 class AuthorApi(Resource):
@@ -65,7 +65,7 @@ class AuthorApi(Resource):
             )
             current_app.logger.error(f"GET Author {author_id} not found")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)
 
     def put(self, author_id: str) -> Response:
         """Update single Author with given id
@@ -95,9 +95,7 @@ class AuthorApi(Resource):
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"PUT Author {str(exp_err)}")
 
-        return Response(
-            object_to_json(response), mimetype="application/json", status=status
-        )
+        return make_response(jsonify(response), status)
 
     def delete(self, author_id: str) -> Response:
         """Delete single Author with given id
@@ -120,4 +118,4 @@ class AuthorApi(Resource):
             )
             current_app.logger.error(f"DELETE Author {author_id} not found")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)

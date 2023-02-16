@@ -1,7 +1,7 @@
 """All the Quotes API endpoints"""
 
 from datetime import datetime
-from flask import Response, request, current_app
+from flask import Response, request, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from database.models import Quote
@@ -38,7 +38,7 @@ class QuotesApi(Resource):
             current_app.logger.info("GET Quotes")
 
         quotes = cursor_to_json(cursor)
-        return Response(quotes, mimetype="application/json", status=200)
+        return make_response(jsonify(quotes), 200)
 
     def post(self) -> Response:
         """Create new Quote
@@ -64,7 +64,7 @@ class QuotesApi(Resource):
             response, status = object_to_json({"Error": str(exp_err)}), 400
             current_app.logger.error(f"POST Quote {str(exp_err)}")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)
 
 
 class QuoteApi(Resource):
@@ -98,9 +98,7 @@ class QuoteApi(Resource):
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"PUT Quote {str(exp_err)}")
 
-        return Response(
-            object_to_json(response), mimetype="application/json", status=status
-        )
+        return make_response(jsonify(response), status)
 
     def delete(self, quote_id: str) -> Response:
         """Delete single Quote with given id
@@ -123,7 +121,7 @@ class QuoteApi(Resource):
             )
             current_app.logger.error(f"DELETE Quote {quote_id} not found")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)
 
     def get(self, quote_id: str) -> Response:
         """Get single Quote with given id
@@ -144,4 +142,4 @@ class QuoteApi(Resource):
             )
             current_app.logger.error(f"GET Quote {quote_id} not found")
 
-        return Response(response, mimetype="application/json", status=status)
+        return make_response(jsonify(response), status)
