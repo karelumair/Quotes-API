@@ -18,7 +18,7 @@ class AuthorsApi(Resource):
         Returns:
             Response: JSON object of all the Authors
         """
-        cursor = Author.objects()
+        cursor = Author.objects().exclude("scrapeId")
         authors = cursor_to_json(cursor)
         current_app.logger.info("GET Authors")
         return make_response(jsonify(authors), 200)

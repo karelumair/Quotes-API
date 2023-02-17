@@ -1,11 +1,13 @@
 """Utility for scraping quotes data"""
 
+
+from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
 from celery import shared_task
 from selenium.webdriver.common.by import By
 from utils.utils import init_driver, get_date
-from database.models import ScrapedAuthor
+from database.models import ScrapedAuthor, Author, Quote
 
 
 def scrape_quotes(url) -> list:
@@ -75,6 +77,25 @@ def scrape_authors() -> bool:
             "description": description,
         }
 
-        author.update(**author_data)
+        author.update(**author_data, updatedOn=datetime.now(timezone.utc))
+
+    update_authors_collection()
+
+    return True
+
+
+def update_authors_collection():
+    """This function moves scarped authors to authors collection"""
+
+    for scraped_author in ScrapedAuthor.objects():
+        scraped_author_data = scraped_author.to_mongo()
+        _id = scraped_author_data.pop("_id")
+        scraped_author_data.pop("link")
+
+        author = Author(**scraped_author_data, scrapeId=_id)
+        author.save()
+
+        for quote in Quote.objects(scrapedAuthor=_id):
+            quote.update(author=author.id, updatedOn=datetime.now(timezone.utc))
 
     return True

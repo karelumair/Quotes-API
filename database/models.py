@@ -11,6 +11,7 @@ class Author(db.Document):
     dob = db.DateTimeField(required=True)
     country = db.StringField(required=True)
     description = db.StringField(required=True)
+    scrapeId = db.ObjectIdField()
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {"collection": "authors"}
