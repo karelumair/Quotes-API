@@ -1,6 +1,6 @@
 """All the Authors API endpoints"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import request, Response, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
@@ -31,9 +31,11 @@ class AuthorsApi(Resource):
         """
         try:
             body = request.get_json()
+
             author_validate = AuthorSchema(**body)
             author = Author(**author_validate.dict())
             author.save()
+
             response, status = author.to_json(), 201
             current_app.logger.info(f"POST Author {author.id}")
         except Exception as exp_err:
@@ -75,7 +77,7 @@ class AuthorApi(Resource):
         """
         try:
             body = request.get_json()
-            body["updatedOn"] = datetime.utcnow()
+            body["updatedOn"] = datetime.now(timezone.utc)
 
             author_validate = AuthorUpdateSchema(**body)
             update_values = {
@@ -83,7 +85,7 @@ class AuthorApi(Resource):
             }
             Author.objects.get(id=author_id).update(**update_values)
 
-            response, status = {"id": str(author_id)}, 200
+            response, status = {"id": author_id}, 200
             current_app.logger.info(f"PUT Author {author_id}")
         except DoesNotExist:
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404

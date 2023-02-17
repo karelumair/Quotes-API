@@ -1,5 +1,6 @@
 """Schema's for Data Validation"""
 
+import datetime
 from typing import Optional
 from bson import ObjectId
 from pydantic import BaseModel
@@ -37,6 +38,7 @@ class AuthorUpdateSchema(BaseModel):
     dob: Optional[str]
     country: Optional[str]
     description: Optional[str]
+    updatedOn: Optional[datetime.datetime]
 
 
 class QuoteSchema(BaseModel):
@@ -53,3 +55,4 @@ class QuoteUpdateSchema(BaseModel):
 
     quote: Optional[str]
     tags: Optional[list]
+    updatedOn: Optional[datetime.datetime]
