@@ -1,10 +1,9 @@
 """Utility for json conversion and selenium setup"""
 
-import os
+from os import path
 import datetime
 import json
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 
 def cursor_to_json(data):
@@ -50,11 +49,8 @@ def init_driver():
     Returns:
         driver: selenium driver
     """
-    options = FirefoxOptions()
+    options = webdriver.ChromeOptions()
     options.add_argument("--headless")
-
-    # print(os.environ.get("SELENIUM_DRIVER"))
-    selenium_driver = os.environ.get("SELENIUM_DRIVER")
-    driver = webdriver.Firefox(executable_path=selenium_driver, options=options)
-
-    return driver
+    return webdriver.Chrome(
+        executable_path=path.abspath("chromedriver"), options=options
+    )

@@ -34,7 +34,7 @@ class QuotesApi(Resource):
             cursor = Quote.objects().aggregate(pipeline)
             current_app.logger.info(f"GET Quotes by tags {tags}")
         else:
-            cursor = Quote.objects(author__exists=True)
+            cursor = Quote.objects(author__exists=True).exclude("scrapedAuthor")
             current_app.logger.info("GET Quotes")
 
         quotes = cursor_to_json(cursor)
