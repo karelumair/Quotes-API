@@ -1,6 +1,6 @@
 """All the Quotes API endpoints"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Response, request, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
@@ -48,10 +48,11 @@ class QuotesApi(Resource):
         """
         try:
             body = request.get_json()
-            quote = Quote(**body)
+
             quote_validate = QuoteSchema(**body)
             quote = Quote(**quote_validate.dict())
             quote.save()
+
             response, status = quote.to_json(), 201
             current_app.logger.info(f"POST Quote {quote.id}")
         except DoesNotExist:
@@ -78,7 +79,7 @@ class QuoteApi(Resource):
         """
         try:
             body = request.get_json()
-            body["updatedOn"] = datetime.utcnow()
+            body["updatedOn"] = datetime.now(timezone.utc)
 
             quote_validate = QuoteUpdateSchema(**body)
             update_values = {
@@ -86,7 +87,7 @@ class QuoteApi(Resource):
             }
             Quote.objects.get(id=quote_id).update(**update_values)
 
-            response, status = {"id": str(quote_id)}, 200
+            response, status = {"id": quote_id}, 200
             current_app.logger.info(f"GET Quote {quote_id}")
         except DoesNotExist:
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
