@@ -3,14 +3,15 @@
 from flask import make_response, jsonify, current_app
 from flask_restful import Resource
 from celery.result import AsyncResult
-from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes, scrape_authors
+from utils.celery_app import check_celery_available
 from constants.app_constants import QUOTES_URL
 
 
 class ScrapeQuotesApi(Resource):
     """API for Scraping Quotes"""
 
+    @check_celery_available
     def get(self):
         """Scrape and add data to the database
 
@@ -18,23 +19,11 @@ class ScrapeQuotesApi(Resource):
             Response: JSON object of message success
         """
         try:
-            quotes = scrape_quotes(QUOTES_URL)
-
-            for quote in quotes:
-                author_data = quote.pop("author")
-                author = ScrapedAuthor.objects(link=author_data["link"]).first()
-
-                if author is None:
-                    author = ScrapedAuthor(**author_data)
-                    author.save()
-
-                quote["scrapedAuthor"] = author.id
-                quote = Quote(**quote)
-                quote.save()
+            task = scrape_quotes.delay(QUOTES_URL)
 
             response, status = {
-                "message": "Data scraping successful!",
-                "n_records": len(quotes),
+                "message": "Scraping task started!",
+                "task_id": task.id,
             }, 200
             current_app.logger.info("GET Scrape Quotes")
         except Exception as exp_err:
@@ -47,6 +36,7 @@ class ScrapeQuotesApi(Resource):
 class ScrapeAuthorsApi(Resource):
     """API for Scraping Authors"""
 
+    @check_celery_available
     def get(self):
         """Scrape authors and update to the database
 
