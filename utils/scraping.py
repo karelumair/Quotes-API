@@ -5,10 +5,11 @@ from bs4 import BeautifulSoup
 from celery import shared_task
 from selenium.webdriver.common.by import By
 from utils.utils import init_driver, get_date
-from database.models import ScrapedAuthor
+from database.models import ScrapedAuthor, Quote
 
 
-def scrape_quotes(url) -> list:
+@shared_task
+def scrape_quotes(url) -> bool:
     """This function scrape quotes data
 
     Args:
@@ -48,7 +49,31 @@ def scrape_quotes(url) -> list:
             next_page = False
 
     driver.quit()
-    return quotes_data
+    add_quotes_db(quotes_data)
+
+    return True
+
+
+def add_quotes_db(quotes: list) -> bool:
+    """This functions add the quotes documents to the database
+
+    Args:
+        quotes (list): List of quotes documents
+    """
+
+    for quote in quotes:
+        author_data = quote.pop("author")
+        author = ScrapedAuthor.objects(link=author_data["link"]).first()
+
+        if author is None:
+            author = ScrapedAuthor(**author_data)
+            author.save()
+
+        quote["scrapedAuthor"] = author.id
+        quote = Quote(**quote)
+        quote.save()
+
+    return True
 
 
 @shared_task

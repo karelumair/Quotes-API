@@ -3,8 +3,8 @@
 from flask import make_response, jsonify, current_app
 from flask_restful import Resource
 from celery.result import AsyncResult
-from database.models import ScrapedAuthor, Quote
 from utils.scraping import scrape_quotes, scrape_authors
+from utils.celery_app import celery_available
 from constants.app_constants import QUOTES_URL
 
 
@@ -18,25 +18,18 @@ class ScrapeQuotesApi(Resource):
             Response: JSON object of message success
         """
         try:
-            quotes = scrape_quotes(QUOTES_URL)
+            if celery_available():
+                task = scrape_quotes.delay(QUOTES_URL)
 
-            for quote in quotes:
-                author_data = quote.pop("author")
-                author = ScrapedAuthor.objects(link=author_data["link"]).first()
+                response, status = {
+                    "message": "Scraping task started!",
+                    "task_id": task.id,
+                }, 200
+                current_app.logger.info("GET Scrape Quotes")
 
-                if author is None:
-                    author = ScrapedAuthor(**author_data)
-                    author.save()
-
-                quote["scrapedAuthor"] = author.id
-                quote = Quote(**quote)
-                quote.save()
-
-            response, status = {
-                "message": "Data scraping successful!",
-                "n_records": len(quotes),
-            }, 200
-            current_app.logger.info("GET Scrape Quotes")
+            else:
+                response, status = {"message": "Celery worker is not running!"}, 500
+                current_app.logger.info("GET Scrape Authors: Celery worker not running")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"Scrape {str(exp_err)}")
@@ -54,13 +47,18 @@ class ScrapeAuthorsApi(Resource):
             Response: JSON object of message success
         """
         try:
-            task = scrape_authors.delay()
+            if celery_available():
+                task = scrape_authors.delay()
 
-            response, status = {
-                "message": "Scraping task started!",
-                "task_id": task.id,
-            }, 200
-            current_app.logger.info("GET Scrape Authors")
+                response, status = {
+                    "message": "Scraping task started!",
+                    "task_id": task.id,
+                }, 200
+                current_app.logger.info("GET Scrape Authors")
+
+            else:
+                response, status = {"message": "Celery worker is not running!"}, 500
+                current_app.logger.info("GET Scrape Authors: Celery worker not running")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"Scrape {str(exp_err)}")

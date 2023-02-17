@@ -29,3 +29,10 @@ def update_sent_state(sender=None, headers=None, **kwargs):
     backend = task.backend if task else current_app.backend
 
     backend.store_result(headers["id"], None, "IN_PROGRESS")
+
+
+def celery_available():
+    """This function checks if the celery worker is running"""
+
+    workers = current_app.control.ping(timeout=1)
+    return workers != []
