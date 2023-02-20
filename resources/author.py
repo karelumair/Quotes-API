@@ -22,9 +22,8 @@ class AuthorsApi(Resource):
 
         cursor = Author.objects().exclude("scrapeId")
         authors = cursor_to_json(cursor)
-        n_authors = len(authors)
 
-        current_app.logger.info(f"GET Authors - FETCHED {n_authors} Authors")
+        current_app.logger.info(f"GET Authors - FETCHED {len(authors)} Authors")
         return make_response(jsonify(authors), 200)
 
     def post(self) -> Response:
