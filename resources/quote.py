@@ -128,7 +128,8 @@ class QuoteApi(Resource):
             Response: JSON object of Quote
         """
         try:
-            response, status = Quote.objects.get(id=quote_id).to_json(), 200
+            quote = Quote.objects.exclude("scrapedAuthor").get(id=quote_id)
+            response, status = quote.to_json(), 200
             current_app.logger.info(f"GET Quote {quote_id}")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404

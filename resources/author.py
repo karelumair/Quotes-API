@@ -58,7 +58,8 @@ class AuthorApi(Resource):
             Response: JSON object of Author
         """
         try:
-            response, status = Author.objects.get(id=author_id).to_json(), 200
+            author = Author.objects.exclude("scrapeId").get(id=author_id)
+            response, status = author.to_json(), 200
             current_app.logger.info(f"GET Author {author_id}")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
