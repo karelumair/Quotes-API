@@ -18,6 +18,8 @@ class ScrapeQuotesApi(Resource):
         Returns:
             Response: JSON object of message success
         """
+        current_app.logger.info("GET Scrape Quotes - REQUEST RECEIVED")
+
         try:
             task = scrape_quotes.delay(QUOTES_URL)
 
@@ -25,10 +27,10 @@ class ScrapeQuotesApi(Resource):
                 "message": "Scraping task started!",
                 "task_id": task.id,
             }, 200
-            current_app.logger.info("GET Scrape Quotes")
+            current_app.logger.info(f"GET Scrape Quotes - Task Id: {task.id}")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"Scrape {str(exp_err)}")
+            current_app.logger.error(f"GET Scrape Quotes - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -43,6 +45,8 @@ class ScrapeAuthorsApi(Resource):
         Returns:
             Response: JSON object of message success
         """
+        current_app.logger.info("GET Scrape Authors - REQUEST RECEIVED")
+
         try:
             task = scrape_authors.delay()
 
@@ -50,10 +54,10 @@ class ScrapeAuthorsApi(Resource):
                 "message": "Scraping task started!",
                 "task_id": task.id,
             }, 200
-            current_app.logger.info("GET Scrape Authors")
+            current_app.logger.info(f"GET Scrape Authors - Task Id: {task.id}")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"Scrape {str(exp_err)}")
+            current_app.logger.error(f"GET Scrape Authors - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -70,10 +74,14 @@ class ScrapeStatus(Resource):
         Returns:
             tuple: JSON and status code
         """
+        current_app.logger.info("GET Scrape Status - REQUEST RECEIVED")
+
         task_result = AsyncResult(task_id)
         result = {"task_status": "Task id does not exists"}
         if task_result.status != "PENDING":
             result = {
                 "task_status": task_result.status,
             }
+
+        current_app.logger.info(f"GET Scrape Status - Status: {task_result.status}")
         return make_response(jsonify(result), 200)
