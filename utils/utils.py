@@ -4,6 +4,7 @@ from os import path
 import datetime
 import json
 from selenium import webdriver
+from database.models import Author
 
 
 def cursor_to_json(data):
@@ -41,6 +42,27 @@ def get_date(date):
         datetime: datetime object
     """
     return datetime.datetime.strptime(date, "%B %d, %Y")
+
+
+def quote_aggregate_to_json(cursor):
+    """converts quotes aggregation result to json
+
+    Args:
+        cursor: mongoengine aggregation result cursor
+
+    Returns:
+        list: list of dictionary
+    """
+    quotes = []
+
+    for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        author = Author.objects.get(id=doc["author"])
+        doc["author"] = {"_id": str(author.id), "name": author.name}
+
+        quotes.append(doc)
+
+    return quotes
 
 
 def init_driver():

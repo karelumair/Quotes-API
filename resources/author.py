@@ -18,9 +18,12 @@ class AuthorsApi(Resource):
         Returns:
             Response: JSON object of all the Authors
         """
+        current_app.logger.info("GET Authors - REQUEST RECEIVED")
+
         cursor = Author.objects().exclude("scrapeId")
         authors = cursor_to_json(cursor)
-        current_app.logger.info("GET Authors")
+
+        current_app.logger.info(f"GET Authors - FETCHED {len(authors)} Authors")
         return make_response(jsonify(authors), 200)
 
     def post(self) -> Response:
@@ -29,6 +32,8 @@ class AuthorsApi(Resource):
         Returns:
             Response: JSON object of created Author
         """
+        current_app.logger.info("POST Author - REQUEST RECEIVED")
+
         try:
             body = request.get_json()
 
@@ -37,10 +42,10 @@ class AuthorsApi(Resource):
             author.save()
 
             response, status = author.to_json(), 201
-            current_app.logger.info(f"POST Author {author.id}")
+            current_app.logger.info(f"POST Author - ADDED Author Id:{author.id}")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"POST Author {str(exp_err)}")
+            current_app.logger.error(f"POST Author - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -57,12 +62,15 @@ class AuthorApi(Resource):
         Returns:
             Response: JSON object of Author
         """
+        current_app.logger.info(f"GET Author Id:{author_id} - RECEIVED REQUEST")
+
         try:
-            response, status = Author.objects.get(id=author_id).to_json(), 200
-            current_app.logger.info(f"GET Author {author_id}")
+            author = Author.objects.exclude("scrapeId").get(id=author_id)
+            response, status = author.to_json(), 200
+            current_app.logger.info(f"GET Author Id:{author_id} - FETCHED")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"GET Author {author_id} not found")
+            current_app.logger.error(f"GET Author Id:{author_id} - NOT FOUND")
 
         return make_response(jsonify(response), status)
 
@@ -75,6 +83,8 @@ class AuthorApi(Resource):
         Returns:
             Response: JSON object of created Author
         """
+        current_app.logger.info(f"PUT Author Id:{author_id} - RECEIVED REQUEST")
+
         try:
             body = request.get_json()
             body["updatedOn"] = datetime.now(timezone.utc)
@@ -86,13 +96,13 @@ class AuthorApi(Resource):
             Author.objects.get(id=author_id).update(**update_values)
 
             response, status = {"id": author_id}, 200
-            current_app.logger.info(f"PUT Author {author_id}")
+            current_app.logger.info(f"PUT Author Id:{author_id} - UPDATED")
         except DoesNotExist:
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"PUT Author {author_id} not found")
+            current_app.logger.error(f"PUT Author Id:{author_id} - NOT FOUND")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"PUT Author {str(exp_err)}")
+            current_app.logger.error(f"PUT Author Id:{author_id} - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -105,13 +115,15 @@ class AuthorApi(Resource):
         Returns:
             Response: Empty
         """
+        current_app.logger.info(f"DELETE Author Id:{author_id} - RECEIVED REQUEST")
+
         try:
             author = Author.objects.get(id=author_id)
             author.delete()
             response, status = "", 204
-            current_app.logger.info(f"DELETE Author {author.id}")
+            current_app.logger.info(f"DELETE Author Id:{author_id} - DELETED")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"DELETE Author {author_id} not found")
+            current_app.logger.error(f"DELETE Author Id:{author_id} - NOT FOUND")
 
         return make_response(jsonify(response), status)

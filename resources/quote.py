@@ -6,7 +6,7 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from flask_restful import Resource
 from database.models import Quote
 from database.schemas import QuoteSchema, QuoteUpdateSchema
-from utils.utils import cursor_to_json
+from utils.utils import cursor_to_json, quote_aggregate_to_json
 
 
 class QuotesApi(Resource):
@@ -18,6 +18,8 @@ class QuotesApi(Resource):
         Returns:
             Response: JSON object of all the Quotes
         """
+        current_app.logger.info("GET Authors - REQUEST RECEIVED")
+
         tags = request.args.get("tags", None)
         if tags is not None:
             tags = tags.split(",")
@@ -29,15 +31,18 @@ class QuotesApi(Resource):
                     }
                 },
                 {"$sort": {"matchedCount": -1}},
-                {"$project": {"matchedCount": 0}},
+                {"$project": {"matchedCount": 0, "scrapedAuthor": 0}},
             ]
-            cursor = Quote.objects().aggregate(pipeline)
-            current_app.logger.info(f"GET Quotes by tags {tags}")
+            cursor = Quote.objects(author__exists=True).aggregate(pipeline)
+            quotes = quote_aggregate_to_json(cursor)
+            current_app.logger.info(
+                f"GET Quotes by tags {tags} - FETCHED {len(quotes)} Quotes"
+            )
         else:
             cursor = Quote.objects(author__exists=True).exclude("scrapedAuthor")
-            current_app.logger.info("GET Quotes")
+            quotes = cursor_to_json(cursor)
+            current_app.logger.info(f"GET Quotes - FETCHED {len(quotes)} Quotes")
 
-        quotes = cursor_to_json(cursor)
         return make_response(jsonify(quotes), 200)
 
     def post(self) -> Response:
@@ -46,6 +51,8 @@ class QuotesApi(Resource):
         Returns:
             Response: JSON object of created Quote
         """
+        current_app.logger.info("POST Quote - REQUEST RECEIVED")
+
         try:
             body = request.get_json()
 
@@ -54,13 +61,15 @@ class QuotesApi(Resource):
             quote.save()
 
             response, status = quote.to_json(), 201
-            current_app.logger.info(f"POST Quote {quote.id}")
+            current_app.logger.info(f"POST Quote - ADDED Quote Id:{quote.id}")
         except DoesNotExist:
             response, status = {"Error": "Author id Does Not Exist!"}, 404
-            current_app.logger.error("GET Quote: Author not found")
+            current_app.logger.error(
+                "POST Quote - Author Id:{quote_validate.author} NOT FOUND"
+            )
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"POST Quote {str(exp_err)}")
+            current_app.logger.error(f"POST Quote - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -77,6 +86,8 @@ class QuoteApi(Resource):
         Returns:
             Response: JSON object of Quote
         """
+        current_app.logger.info(f"PUT Quote Id:{quote_id} - RECEIVED REQUEST")
+
         try:
             body = request.get_json()
             body["updatedOn"] = datetime.now(timezone.utc)
@@ -88,13 +99,13 @@ class QuoteApi(Resource):
             Quote.objects.get(id=quote_id).update(**update_values)
 
             response, status = {"id": quote_id}, 200
-            current_app.logger.info(f"GET Quote {quote_id}")
+            current_app.logger.info(f"PUT Quote Id:{quote_id} - UPDATED")
         except DoesNotExist:
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"GET Quote {quote_id} not found")
+            current_app.logger.error(f"PUT Quote Id:{quote_id} - NOT FOUND")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
-            current_app.logger.error(f"PUT Quote {str(exp_err)}")
+            current_app.logger.error(f"PUT Quote Id:{quote_id} - {str(exp_err)}")
 
         return make_response(jsonify(response), status)
 
@@ -107,14 +118,16 @@ class QuoteApi(Resource):
         Returns:
             Response: Empty
         """
+        current_app.logger.info(f"DELETE Quote Id:{quote_id} - RECEIVED REQUEST")
+
         try:
             quote = Quote.objects.get(id=quote_id)
             quote.delete()
             response, status = "", 204
-            current_app.logger.info(f"DELETE Quote {quote_id}")
+            current_app.logger.info(f"DELETE Quote Id:{quote_id} - DELETED")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"DELETE Quote {quote_id} not found")
+            current_app.logger.error(f"DELETE Quote Id:{quote_id} - NOT FOUND")
 
         return make_response(jsonify(response), status)
 
@@ -127,11 +140,14 @@ class QuoteApi(Resource):
         Returns:
             Response: JSON object of Quote
         """
+        current_app.logger.info(f"GET Quote Id:{quote_id} - RECEIVED REQUEST")
+
         try:
-            response, status = Quote.objects.get(id=quote_id).to_json(), 200
-            current_app.logger.info(f"GET Quote {quote_id}")
+            quote = Quote.objects.exclude("scrapedAuthor").get(id=quote_id)
+            response, status = quote.to_json(), 200
+            current_app.logger.info(f"GET Quote Id:{quote_id} - FETCHED")
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
-            current_app.logger.error(f"GET Quote {quote_id} not found")
+            current_app.logger.error(f"GET Quote Id:{quote_id} - NOT FOUND")
 
         return make_response(jsonify(response), status)
