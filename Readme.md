@@ -52,7 +52,6 @@ http://localhost:5000/scrape/quotes/
 ```
 ##### Methods:
 - GET
-- POST
 
 **Scrape Authors**
 ```
@@ -60,5 +59,10 @@ http://localhost:5000/scrape/authors/
 ```
 ##### Methods:
 - GET
-- PUT
-- DELETE
+
+**Scrape Status**
+```
+http://localhost:5000/scrape/tasks/<task_id>/
+```
+##### Methods:
+- GET
