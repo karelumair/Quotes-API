@@ -79,8 +79,8 @@ def add_quotes_db(quotes: list) -> bool:
 
         quote["scrapedAuthor"] = author.id
         try:
-            quote = Quote(**quote)
-            quote.save()
+            quote_obj = Quote(**quote)
+            quote_obj.save()
         except NotUniqueError:
             quote_obj = Quote.objects.get(quote=quote["quote"])
             quote_obj.update(**quote, updatedOn=datetime.now(timezone.utc))
