@@ -10,8 +10,8 @@ from utils.utils import init_driver, get_date
 from database.models import ScrapedAuthor, Author, Quote
 
 
-@shared_task
-def scrape_quotes(url) -> bool:
+@shared_task(bind=True)
+def scrape_quotes(self, url) -> dict:
     """This function scrape quotes data
 
     Args:
@@ -25,6 +25,7 @@ def scrape_quotes(url) -> bool:
 
     quotes_data = []
     next_page = True
+    fetched_records = 0
 
     while next_page:
 
@@ -40,6 +41,10 @@ def scrape_quotes(url) -> bool:
             }
 
             quotes_data.append(data)
+            fetched_records += 1
+            self.update_state(
+                state="IN_PROGRESS", meta={"fetched_records": fetched_records}
+            )
 
         try:
             next_li = driver.find_element(By.CLASS_NAME, "next")
@@ -53,7 +58,7 @@ def scrape_quotes(url) -> bool:
     driver.quit()
     add_quotes_db(quotes_data)
 
-    return True
+    return {"fetched_records": fetched_records}
 
 
 def add_quotes_db(quotes: list) -> bool:
@@ -78,8 +83,8 @@ def add_quotes_db(quotes: list) -> bool:
     return True
 
 
-@shared_task
-def scrape_authors() -> bool:
+@shared_task(bind=True)
+def scrape_authors(self) -> dict:
     """This function scrape authors data
 
     Args:
@@ -88,7 +93,10 @@ def scrape_authors() -> bool:
     Returns:
         bool: returns status true
     """
-    for author in ScrapedAuthor.objects():
+    scraped_authors = ScrapedAuthor.objects()
+    fetched_records = 0
+
+    for author in scraped_authors:
         res = requests.get(author.link, timeout=10)
         soup = BeautifulSoup(res.content, features="html5lib")
 
@@ -104,12 +112,18 @@ def scrape_authors() -> bool:
 
         author.update(**author_data, updatedOn=datetime.now(timezone.utc))
 
+        fetched_records += 1
+        self.update_state(
+            state="IN_PROGRESS",
+            meta={"fetched_records": fetched_records, "total": len(scraped_authors)},
+        )
+
     update_authors_collection()
 
-    return True
+    return {"fetched_records": fetched_records, "total": len(scraped_authors)}
 
 
-def update_authors_collection():
+def update_authors_collection() -> bool:
     """This function moves scarped authors to authors collection"""
 
     for scraped_author in ScrapedAuthor.objects():
