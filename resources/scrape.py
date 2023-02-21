@@ -79,9 +79,12 @@ class ScrapeStatus(Resource):
         task_result = AsyncResult(task_id)
         result = {"task_status": "Task id does not exists"}
         if task_result.status != "PENDING":
-            result = {
-                "task_status": task_result.status,
-            }
+            result["fetched_records"] = task_result.result.get("fetched_records")
+
+            if task_result.result.get("total", None) is not None:
+                result["total"] = task_result.result.get("total")
+
+            result["task_status"] = task_result.status
 
         current_app.logger.info(f"GET Scrape Status - Status: {task_result.status}")
         return make_response(jsonify(result), 200)
