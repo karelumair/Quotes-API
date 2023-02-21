@@ -31,7 +31,27 @@ class QuotesApi(Resource):
                     }
                 },
                 {"$sort": {"matchedCount": -1}},
-                {"$project": {"matchedCount": 0, "scrapedAuthor": 0}},
+                {
+                    "$lookup": {
+                        "from": "authors",
+                        "localField": "author",
+                        "foreignField": "_id",
+                        "as": "author",
+                    }
+                },
+                {"$set": {"author": {"$arrayElemAt": ["$author", 0]}}},
+                {
+                    "$project": {
+                        "matchedCount": 0,
+                        "scrapedAuthor": 0,
+                        "author.dob": 0,
+                        "author.country": 0,
+                        "author.description": 0,
+                        "author.createdOn": 0,
+                        "author.updatedOn": 0,
+                        "author.scrapeId": 0,
+                    }
+                },
             ]
             cursor = Quote.objects(author__exists=True).aggregate(pipeline)
             quotes = quote_aggregate_to_json(cursor)
