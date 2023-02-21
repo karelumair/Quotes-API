@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from flask import Response, request, jsonify, make_response, current_app
-from mongoengine.errors import DoesNotExist, ValidationError
+from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
 from database.models import Quote
 from database.schemas import QuoteSchema, QuoteUpdateSchema
@@ -62,6 +62,9 @@ class QuotesApi(Resource):
 
             response, status = quote.to_json(), 201
             current_app.logger.info(f"POST Quote - ADDED Quote Id:{quote.id}")
+        except NotUniqueError:
+            response, status = {"Error": "Quote Already Exist"}, 400
+            current_app.logger.error("POST Quote - DUPLICATE QUOTE")
         except DoesNotExist:
             response, status = {"Error": "Author id Does Not Exist!"}, 404
             current_app.logger.error(
@@ -100,6 +103,9 @@ class QuoteApi(Resource):
 
             response, status = {"id": quote_id}, 200
             current_app.logger.info(f"PUT Quote Id:{quote_id} - UPDATED")
+        except NotUniqueError:
+            response, status = {"Error": "Quote Already Exist"}, 400
+            current_app.logger.error("POST Quote - DUPLICATE QUOTE")
         except DoesNotExist:
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
             current_app.logger.error(f"PUT Quote Id:{quote_id} - NOT FOUND")

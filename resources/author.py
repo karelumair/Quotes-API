@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from flask import request, Response, jsonify, make_response, current_app
-from mongoengine.errors import DoesNotExist, ValidationError
+from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
 from database.models import Author
 from database.schemas import AuthorSchema, AuthorUpdateSchema
@@ -43,6 +43,9 @@ class AuthorsApi(Resource):
 
             response, status = author.to_json(), 201
             current_app.logger.info(f"POST Author - ADDED Author Id:{author.id}")
+        except NotUniqueError:
+            response, status = {"Error": "Author Name Already Exist"}, 400
+            current_app.logger.error("POST Author - DUPLICATE QUOTE")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"POST Author - {str(exp_err)}")
@@ -97,6 +100,9 @@ class AuthorApi(Resource):
 
             response, status = {"id": author_id}, 200
             current_app.logger.info(f"PUT Author Id:{author_id} - UPDATED")
+        except NotUniqueError:
+            response, status = {"Error": "Author Name Already Exist"}, 400
+            current_app.logger.error("POST Author - DUPLICATE QUOTE")
         except DoesNotExist:
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
             current_app.logger.error(f"PUT Author Id:{author_id} - NOT FOUND")

@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from celery import shared_task
 from selenium.webdriver.common.by import By
+from mongoengine.errors import NotUniqueError
 from utils.utils import init_driver, get_date
 from database.models import ScrapedAuthor, Author, Quote
 
@@ -77,8 +78,12 @@ def add_quotes_db(quotes: list) -> bool:
             author.save()
 
         quote["scrapedAuthor"] = author.id
-        quote = Quote(**quote)
-        quote.save()
+        try:
+            quote = Quote(**quote)
+            quote.save()
+        except NotUniqueError:
+            quote_obj = Quote.objects.get(quote=quote["quote"])
+            quote_obj.update(**quote, updatedOn=datetime.now(timezone.utc))
 
     return True
 
@@ -131,8 +136,12 @@ def update_authors_collection() -> bool:
         _id = scraped_author_data.pop("_id")
         scraped_author_data.pop("link")
 
-        author = Author(**scraped_author_data, scrapeId=_id)
-        author.save()
+        try:
+            author = Author(**scraped_author_data, scrapeId=_id)
+            author.save()
+        except NotUniqueError:
+            author = Author.objects.get(name=scraped_author_data["name"])
+            author.update(**scraped_author_data, updatedOn=datetime.now(timezone.utc))
 
         for quote in Quote.objects(scrapedAuthor=_id):
             quote.update(author=author.id, updatedOn=datetime.now(timezone.utc))

@@ -7,7 +7,7 @@ from database.db import db
 class Author(db.Document):
     """Author Model"""
 
-    name = db.StringField(required=True)
+    name = db.StringField(required=True, unique=True)
     dob = db.DateTimeField(required=True)
     country = db.StringField(required=True)
     description = db.StringField(required=True)
@@ -43,7 +43,7 @@ class ScrapedAuthor(db.Document):
 class Quote(db.Document):
     """Quote Model"""
 
-    quote = db.StringField(required=True)
+    quote = db.StringField(required=True, unique=True)
     author = db.ReferenceField(Author, reverse_delete_rule=db.CASCADE, dbref=False)
     scrapedAuthor = db.ReferenceField(
         ScrapedAuthor, reverse_delete_rule=db.CASCADE, dbref=False
