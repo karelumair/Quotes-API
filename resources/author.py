@@ -38,7 +38,7 @@ class AuthorsApi(Resource):
             body = request.get_json()
 
             author_validate = AuthorSchema(**body)
-            author = Author(**author_validate.dict())
+            author = Author(**author_validate.dict(), createdBy="author")
             author.save()
 
             response, status = author.to_json(), 201
@@ -96,7 +96,7 @@ class AuthorApi(Resource):
             update_values = {
                 k: v for k, v in author_validate.dict().items() if v is not None
             }
-            Author.objects.get(id=author_id).update(**update_values)
+            Author.objects.get(id=author_id).update(**update_values, updatedBy="author")
 
             response, status = {"id": author_id}, 200
             current_app.logger.info(f"PUT Author Id:{author_id} - UPDATED")

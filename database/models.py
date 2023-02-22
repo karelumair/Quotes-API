@@ -12,6 +12,8 @@ class Author(db.Document):
     country = db.StringField(required=True)
     description = db.StringField(required=True)
     scrapeId = db.ObjectIdField()
+    createdBy = db.StringField()
+    updatedBy = db.StringField()
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {"collection": "authors"}
@@ -49,6 +51,8 @@ class Quote(db.Document):
         ScrapedAuthor, reverse_delete_rule=db.CASCADE, dbref=False
     )
     tags = db.ListField(db.StringField())
+    createdBy = db.StringField()
+    updatedBy = db.StringField()
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {"collection": "quotes"}

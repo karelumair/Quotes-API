@@ -86,11 +86,13 @@ def add_quotes_db(quotes: list) -> bool:
 
         quote["scrapedAuthor"] = author.id
         try:
-            quote_obj = Quote(**quote)
+            quote_obj = Quote(**quote, createdBy="scraper")
             quote_obj.save()
         except NotUniqueError:
             quote_obj = Quote.objects.get(quote=quote["quote"])
-            quote_obj.update(**quote, updatedOn=datetime.now(timezone.utc))
+            quote_obj.update(
+                **quote, updatedOn=datetime.now(timezone.utc), updatedBy="scraper"
+            )
 
     return True
 
@@ -144,11 +146,12 @@ def update_authors_collection() -> bool:
         scraped_author_data.pop("link")
 
         try:
-            author = Author(**scraped_author_data, scrapeId=_id)
+            author = Author(**scraped_author_data, scrapeId=_id, createdBy="scraper")
             author.save()
         except NotUniqueError:
             author = Author.objects.get(name=scraped_author_data["name"])
             scraped_author_data["updatedOn"] = datetime.now(timezone.utc)
+            scraped_author_data["updatedBy"] = "scraper"
             author.update(**scraped_author_data)
 
         for quote in Quote.objects(scrapedAuthor=_id):
