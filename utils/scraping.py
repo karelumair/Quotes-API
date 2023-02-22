@@ -10,8 +10,7 @@ from selenium.webdriver.common.by import By
 from mongoengine.errors import NotUniqueError
 from utils.utils import init_driver, get_date
 from database.models import ScrapedAuthor, Author, Quote
-
-QUOTES_URL = "https://quotes.toscrape.com/"
+from constants.app_constants import QUOTES_URL
 
 
 @shared_task(bind=True)
@@ -57,9 +56,7 @@ def scrape_quotes(self, single_page: bool = False) -> dict:
 
         try:
             next_li = driver.find_element(By.CLASS_NAME, "next")
-            next_page = True
-            if single_page:
-                next_page = False
+            next_page = not single_page
 
             a_link = next_li.find_element(By.TAG_NAME, "a")
             a_link.click()
