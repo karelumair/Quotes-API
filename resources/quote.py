@@ -77,7 +77,7 @@ class QuotesApi(Resource):
             body = request.get_json()
 
             quote_validate = QuoteSchema(**body)
-            quote = Quote(**quote_validate.dict())
+            quote = Quote(**quote_validate.dict(), createdBy="author")
             # Check if author exists else throw DoesNotExist exception
             Author.objects.get(id=quote_validate.author)
             quote.save()
@@ -121,7 +121,7 @@ class QuoteApi(Resource):
             update_values = {
                 k: v for k, v in quote_validate.dict().items() if v is not None
             }
-            Quote.objects.get(id=quote_id).update(**update_values)
+            Quote.objects.get(id=quote_id).update(**update_values, updatedBy="author")
 
             response, status = {"id": quote_id}, 200
             current_app.logger.info(f"PUT Quote Id:{quote_id} - UPDATED")
