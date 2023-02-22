@@ -78,6 +78,7 @@ class QuotesApi(Resource):
 
             quote_validate = QuoteSchema(**body)
             quote = Quote(**quote_validate.dict())
+            # Check if author exists else throw DoesNotExist exception
             Author.objects.get(id=quote_validate.author)
             quote.save()
 
