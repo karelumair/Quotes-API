@@ -1,6 +1,7 @@
 """Utility for scraping quotes data"""
 
 
+import re
 from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
@@ -31,7 +32,12 @@ def scrape_quotes(self, url) -> dict:
     while next_page:
 
         for quote_div in driver.find_elements(By.CLASS_NAME, "quote"):
-            quote = quote_div.find_element(By.CLASS_NAME, "text").text
+            quote = quote_div.find_element(By.CLASS_NAME, "text")
+            # This removes html quotes (“ ”) to get only text of the quote.
+            # The function replaces quote(“”) characters with empty character.
+            # For example. “This is quote” will result to "This is quote"
+            quote = re.sub(r"[\“\”]", "", quote.text)
+
             author_name = quote_div.find_element(By.CLASS_NAME, "author").text
             author_link = quote_div.find_element(By.TAG_NAME, "a").get_attribute("href")
             tags = [tag.text for tag in quote_div.find_elements(By.CLASS_NAME, "tag")]

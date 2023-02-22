@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from flask import Response, request, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
-from database.models import Quote
+from database.models import Quote, Author
 from database.schemas import QuoteSchema, QuoteUpdateSchema
 from utils.utils import cursor_to_json, quote_aggregate_to_json
 
@@ -31,7 +31,27 @@ class QuotesApi(Resource):
                     }
                 },
                 {"$sort": {"matchedCount": -1}},
-                {"$project": {"matchedCount": 0, "scrapedAuthor": 0}},
+                {
+                    "$lookup": {
+                        "from": "authors",
+                        "localField": "author",
+                        "foreignField": "_id",
+                        "as": "author",
+                    }
+                },
+                {"$set": {"author": {"$arrayElemAt": ["$author", 0]}}},
+                {
+                    "$project": {
+                        "matchedCount": 0,
+                        "scrapedAuthor": 0,
+                        "author.dob": 0,
+                        "author.country": 0,
+                        "author.description": 0,
+                        "author.createdOn": 0,
+                        "author.updatedOn": 0,
+                        "author.scrapeId": 0,
+                    }
+                },
             ]
             cursor = Quote.objects(author__exists=True).aggregate(pipeline)
             quotes = quote_aggregate_to_json(cursor)
@@ -58,6 +78,8 @@ class QuotesApi(Resource):
 
             quote_validate = QuoteSchema(**body)
             quote = Quote(**quote_validate.dict())
+            # Check if author exists else throw DoesNotExist exception
+            Author.objects.get(id=quote_validate.author)
             quote.save()
 
             response, status = quote.to_json(), 201
@@ -68,7 +90,7 @@ class QuotesApi(Resource):
         except DoesNotExist:
             response, status = {"Error": "Author id Does Not Exist!"}, 404
             current_app.logger.error(
-                "POST Quote - Author Id:{quote_validate.author} NOT FOUND"
+                f"POST Quote - Author Id:{quote_validate.author} NOT FOUND"
             )
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400

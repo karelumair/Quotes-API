@@ -4,7 +4,6 @@ from os import path
 import datetime
 import json
 from selenium import webdriver
-from database.models import Author
 
 
 def cursor_to_json(data):
@@ -57,9 +56,7 @@ def quote_aggregate_to_json(cursor):
 
     for doc in cursor:
         doc["_id"] = str(doc["_id"])
-        author = Author.objects.get(id=doc["author"])
-        doc["author"] = {"_id": str(author.id), "name": author.name}
-
+        doc["author"]["_id"] = str(doc["author"]["_id"])
         quotes.append(doc)
 
     return quotes
