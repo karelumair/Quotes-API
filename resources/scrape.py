@@ -5,7 +5,6 @@ from flask_restful import Resource
 from celery.result import AsyncResult
 from utils.scraping import scrape_quotes, scrape_authors
 from utils.celery_app import check_celery_available
-from constants.app_constants import QUOTES_URL
 
 
 class ScrapeQuotesApi(Resource):
@@ -21,7 +20,7 @@ class ScrapeQuotesApi(Resource):
         current_app.logger.info("GET Scrape Quotes - REQUEST RECEIVED")
 
         try:
-            task = scrape_quotes.delay(QUOTES_URL)
+            task = scrape_quotes.delay()
 
             response, status = {
                 "message": "Scraping task started!",

@@ -10,10 +10,11 @@ from selenium.webdriver.common.by import By
 from mongoengine.errors import NotUniqueError
 from utils.utils import init_driver, get_date
 from database.models import ScrapedAuthor, Author, Quote
+from constants.app_constants import QUOTES_URL
 
 
 @shared_task(bind=True)
-def scrape_quotes(self, url) -> dict:
+def scrape_quotes(self, single_page: bool = False) -> dict:
     """This function scrape quotes data
 
     Args:
@@ -23,7 +24,7 @@ def scrape_quotes(self, url) -> dict:
         list: list of quotes data scraped
     """
     driver = init_driver()
-    driver.get(url)
+    driver.get(QUOTES_URL)
 
     quotes_data = []
     next_page = True
@@ -55,7 +56,7 @@ def scrape_quotes(self, url) -> dict:
 
         try:
             next_li = driver.find_element(By.CLASS_NAME, "next")
-            next_page = True
+            next_page = not single_page
 
             a_link = next_li.find_element(By.TAG_NAME, "a")
             a_link.click()
@@ -147,7 +148,8 @@ def update_authors_collection() -> bool:
             author.save()
         except NotUniqueError:
             author = Author.objects.get(name=scraped_author_data["name"])
-            author.update(**scraped_author_data, updatedOn=datetime.now(timezone.utc))
+            scraped_author_data["updatedOn"] = datetime.now(timezone.utc)
+            author.update(**scraped_author_data)
 
         for quote in Quote.objects(scrapedAuthor=_id):
             quote.update(author=author.id, updatedOn=datetime.now(timezone.utc))
