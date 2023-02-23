@@ -1,11 +1,12 @@
 """Celery App"""
 
 from functools import wraps
+from flask import Flask
 from celery import Celery, Task, current_app
 from celery.signals import after_task_publish
 
 
-def init_celery(app) -> Celery:
+def init_celery(app: Flask) -> Celery:
     """Intialize Celery App"""
 
     class FlaskTask(Task):
