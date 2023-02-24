@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+  web:
+    build:
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+     - 5000:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_db?authSource=admin
+      - MONGO_TEST_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_test_db?authSource=admin
+      - LOG_FILE=logs.log
+      - CELERY_BROKER_URL=redis://redis
+      - CELERY_RESULT_BACKEND=redis://redis
+
+  celery-worker:
+    build:
+      dockerfile: Dockerfile
+    entrypoint: "poetry run"
+    command: "celery -A make_celery worker --loglevel=info"
+    restart: always
+    environment:
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_db?authSource=admin
+      - MONGO_TEST_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_test_db?authSource=admin
+      - LOG_FILE=logs.log
+      - CELERY_BROKER_URL=redis://redis
+      - CELERY_RESULT_BACKEND=redis://redis
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  redis:
+      image: redis
+      restart: "always"
