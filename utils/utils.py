@@ -4,9 +4,11 @@ from os import path
 import datetime
 import json
 from selenium import webdriver
+from flask_mongoengine import BaseQuerySet
+from pymongo.command_cursor import CommandCursor
 
 
-def cursor_to_json(data):
+def cursor_to_json(data: BaseQuerySet) -> list:
     """converts mongo cursor to list of json objects
 
     Args:
@@ -31,7 +33,7 @@ def object_to_json(obj):
     return json.dumps(obj, default=str)
 
 
-def get_date(date):
+def get_date(date: str) -> datetime.datetime:
     """convert to datetime object
 
     Args:
@@ -43,7 +45,7 @@ def get_date(date):
     return datetime.datetime.strptime(date, "%B %d, %Y")
 
 
-def quote_aggregate_to_json(cursor):
+def quote_aggregate_to_json(cursor: CommandCursor) -> list:
     """converts quotes aggregation result to json
 
     Args:
@@ -62,7 +64,7 @@ def quote_aggregate_to_json(cursor):
     return quotes
 
 
-def init_driver():
+def init_driver() -> webdriver.Chrome:
     """Initialize selenium driver
 
     Returns:

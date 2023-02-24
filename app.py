@@ -13,7 +13,7 @@ from utils.celery_app import init_celery
 from config import CONFIG
 
 
-def create_app(env="test"):
+def create_app(env: str = "test") -> Flask:
     """Create Flask App"""
 
     logger = logging.getLogger("app")

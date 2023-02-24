@@ -6,7 +6,7 @@ import logging
 LOG_FILE = os.environ.get("LOG_FILE") or "logs.log"
 
 
-def init_logger(logr):
+def init_logger(logr: logging.Logger) -> None:
     """
     Generates a logging object, to log activities in the API.
 
