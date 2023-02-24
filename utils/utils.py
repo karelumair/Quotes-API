@@ -1,6 +1,5 @@
 """Utility for json conversion and selenium setup"""
 
-from os import path
 import datetime
 import json
 from selenium import webdriver
@@ -69,7 +68,8 @@ def init_driver():
         driver: selenium driver
     """
     options = webdriver.ChromeOptions()
+    # Using scraper in docker, may lead to weird errors pop-up,
+    # such as: Running as root without --no-sandbox is not supported.
+    options.add_argument("--no-sandbox")
     options.add_argument("--headless")
-    return webdriver.Chrome(
-        executable_path=path.abspath("chromedriver"), options=options
-    )
+    return webdriver.Chrome(options=options)

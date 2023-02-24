@@ -42,6 +42,11 @@ def create_app(env="test"):
     api.add_resource(ScrapeAuthorsApi, "/scrape/authors/")
     api.add_resource(ScrapeStatus, "/scrape/tasks/<task_id>/")
 
+    # Health check
+    @app.route("/health/")
+    def health_check():
+        return {"status": "ok"}
+
     # Error Handlers
     app.register_blueprint(error_handler_blueprint)
     app.register_error_handler(400, bad_request)
