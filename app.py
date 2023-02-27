@@ -7,7 +7,7 @@ from database.db import init_db
 from resources.error_handler import bad_request, error_handler_blueprint
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
-from resources.scrape import ScrapeQuotesApi, ScrapeAuthorsApi, ScrapeStatus
+from resources.scrape import ScrapeDataApi, ScrapeStatus
 from utils.logger import init_logger
 from utils.celery_app import init_celery
 from config import CONFIG
@@ -38,8 +38,7 @@ def create_app(env: str = "test") -> Flask:
     api.add_resource(QuoteApi, "/quotes/<quote_id>/")
     api.add_resource(AuthorsApi, "/authors/")
     api.add_resource(AuthorApi, "/authors/<author_id>/")
-    api.add_resource(ScrapeQuotesApi, "/scrape/quotes/")
-    api.add_resource(ScrapeAuthorsApi, "/scrape/authors/")
+    api.add_resource(ScrapeDataApi, "/scrape/data/")
     api.add_resource(ScrapeStatus, "/scrape/tasks/<task_id>/")
 
     # Health check
