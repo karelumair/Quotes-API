@@ -1,5 +1,7 @@
 """Constants"""
 
 QUOTES_URL = "https://quotes.toscrape.com/"
-# Time in minutes
-SCRAPING_SCHEDULER_TIME = 120
+# DURATION in minutes
+SCRAPING_SCHEDULER_DURATION = 120
+# DURATION in seconds
+SCRAPED_DATA_CLEAN_UP_DURATION = 86400

@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 from utils.scraping import scrape_data
-from constants.app_constants import SCRAPING_SCHEDULER_TIME
+from constants.app_constants import SCRAPING_SCHEDULER_DURATION
 
 
 def init_scheduler_jobs(scheduler):
@@ -12,5 +12,5 @@ def init_scheduler_jobs(scheduler):
         id=str(uuid4().hex),
         func=scrape_data.delay,
         trigger="interval",
-        minutes=SCRAPING_SCHEDULER_TIME,
+        minutes=SCRAPING_SCHEDULER_DURATION,
     )

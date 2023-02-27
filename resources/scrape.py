@@ -17,7 +17,7 @@ class ScrapeDataApi(Resource):
         Returns:
             Response: JSON object of message success
         """
-        current_app.logger.info("GET Scrape Quotes - REQUEST RECEIVED")
+        current_app.logger.info("GET Scrape Data - REQUEST RECEIVED")
 
         try:
             task = scrape_data.delay()
