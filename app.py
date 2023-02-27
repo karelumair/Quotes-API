@@ -3,6 +3,7 @@
 import logging
 from flask import Flask
 from flask_restful import Api
+from flask_apscheduler import APScheduler
 from database.db import init_db
 from resources.error_handler import bad_request, error_handler_blueprint
 from resources.quote import QuotesApi, QuoteApi
@@ -10,10 +11,11 @@ from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
 from utils.logger import init_logger
 from utils.celery_app import init_celery
+from utils.scheduler import init_scheduler_jobs
 from config import CONFIG
 
 
-def create_app(env: str = "test") -> Flask:
+def create_app(env: str = "test", context: str = "main") -> Flask:
     """Create Flask App"""
 
     logger = logging.getLogger("app")
@@ -50,9 +52,19 @@ def create_app(env: str = "test") -> Flask:
     app.register_blueprint(error_handler_blueprint)
     app.register_error_handler(400, bad_request)
 
+    # Schedule Tasks
+    if context == "main":
+        scheduler = APScheduler()
+        # This allows using /scheduler/ endpoint for getting information about scheduled jobs
+        scheduler.api_enabled = True
+        scheduler.init_app(app)
+
+        init_scheduler_jobs(scheduler)
+        scheduler.start()
+
     return app
 
 
 if __name__ == "__main__":
     flask_app = create_app(env="prod")
-    flask_app.run(debug=True)
+    flask_app.run()
