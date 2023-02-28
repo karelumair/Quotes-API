@@ -2,6 +2,7 @@
 
 import datetime
 from database.db import db
+from constants.app_constants import SCRAPED_DATA_CLEAN_UP_DURATION
 
 
 class Author(db.Document):
@@ -34,7 +35,15 @@ class ScrapedAuthor(db.Document):
     link = db.StringField()
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
-    meta = {"collection": "scrapedAuthors"}
+    meta = {
+        "collection": "scrapedAuthors",
+        "indexes": [
+            {
+                "fields": ["updatedOn"],
+                "expireAfterSeconds": SCRAPED_DATA_CLEAN_UP_DURATION,
+            }
+        ],
+    }
 
     def to_json(self, *args, **kwargs):
         obj = self.to_mongo().to_dict()

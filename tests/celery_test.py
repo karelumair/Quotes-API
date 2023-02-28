@@ -2,7 +2,7 @@
 
 import pytest
 from app import create_app
-from utils.scraping import scrape_quotes, scrape_authors
+from utils.scraping import scrape_data
 
 
 @pytest.fixture(scope="session")
@@ -40,21 +40,14 @@ def make_celery(make_app):
     return celery
 
 
-def test_scrape_quotes(make_celery, celery_worker):
+def test_scrape_data(make_celery, celery_worker):
     """Test Case for Scraping Quotes
 
     Args:
         make_celery (fixture): creates celery app
         celery_worker (fixture): creates celery worker
     """
-    assert scrape_quotes.delay(single_page=True).get() == {"fetched_records": 10}
-
-
-def test_scrape_authors(make_celery, celery_worker):
-    """Test Case for Scraping Authors
-
-    Args:
-        make_celery (fixture): creates celery app
-        celery_worker (fixture): creates celery worker
-    """
-    assert scrape_authors.delay().get() == {"fetched_records": 8, "total": 8}
+    assert scrape_data.delay(single_page=True).get() == {
+        "quotes": {"fetched_records": 10},
+        "authors": {"fetched_records": 8, "total": 8},
+    }

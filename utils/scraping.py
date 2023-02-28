@@ -14,14 +14,29 @@ from constants.app_constants import QUOTES_URL
 
 
 @shared_task(bind=True)
-def scrape_quotes(self, single_page: bool = False) -> dict:
+def scrape_data(self, single_page: bool = False) -> dict:
+    """This function scrape quotes and authors data at a time.
+
+    Args:
+        single_page (bool): bool to scrape only single page
+
+    Returns:
+        dict: dict of no. of fetched records
+    """
+    quote_status = scrape_quotes(self, single_page)
+    author_status = scrape_authors(self)
+
+    return {"quotes": quote_status, "authors": author_status}
+
+
+def scrape_quotes(self, single_page: bool) -> dict:
     """This function scrape quotes data
 
     Args:
-        url (str): link of the website to be scraped
+        single_page (bool): bool to scrape only single page
 
     Returns:
-        list: list of quotes data scraped
+        dict: dict of no. of fetched records
     """
     driver = init_driver()
     driver.get(QUOTES_URL)
@@ -51,7 +66,8 @@ def scrape_quotes(self, single_page: bool = False) -> dict:
             quotes_data.append(data)
             fetched_records += 1
             self.update_state(
-                state="IN_PROGRESS", meta={"fetched_records": fetched_records}
+                state="IN_PROGRESS",
+                meta={"scraping": "quotes", "fetched_records": fetched_records},
             )
 
         try:
@@ -97,15 +113,11 @@ def add_quotes_db(quotes: list) -> bool:
     return True
 
 
-@shared_task(bind=True)
 def scrape_authors(self) -> dict:
     """This function scrape authors data
 
-    Args:
-        url (str): link of the website to be scraped
-
     Returns:
-        bool: returns status true
+        dict: dict of no. of fetched records
     """
     scraped_authors = ScrapedAuthor.objects()
     fetched_records = 0
@@ -129,7 +141,11 @@ def scrape_authors(self) -> dict:
         fetched_records += 1
         self.update_state(
             state="IN_PROGRESS",
-            meta={"fetched_records": fetched_records, "total": len(scraped_authors)},
+            meta={
+                "scraping": "authors",
+                "fetched_records": fetched_records,
+                "total": len(scraped_authors),
+            },
         )
 
     update_authors_collection()
