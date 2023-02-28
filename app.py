@@ -5,7 +5,6 @@ from flask import Flask
 from flask_restful import Api
 from flask_apscheduler import APScheduler
 from database.db import init_db
-from resources.error_handler import bad_request, error_handler_blueprint
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
@@ -15,7 +14,7 @@ from utils.scheduler import init_scheduler_jobs
 from config import CONFIG
 
 
-def create_app(env: str = "test", context: str = "main") -> Flask:
+def create_app(context: str = "main") -> Flask:
     """Create Flask App"""
 
     logger = logging.getLogger("app")
@@ -23,10 +22,7 @@ def create_app(env: str = "test", context: str = "main") -> Flask:
 
     app = Flask(__name__)
 
-    if env == "test":
-        app.config.update(CONFIG["test"])
-    else:
-        app.config.update(CONFIG["prod"])
+    app.config.update(CONFIG)
 
     # Initialize DB
     init_db(app)
@@ -48,10 +44,6 @@ def create_app(env: str = "test", context: str = "main") -> Flask:
     def health_check():
         return {"status": "ok"}
 
-    # Error Handlers
-    app.register_blueprint(error_handler_blueprint)
-    app.register_error_handler(400, bad_request)
-
     # Schedule Tasks
     if context == "main":
         scheduler = APScheduler()
@@ -66,5 +58,5 @@ def create_app(env: str = "test", context: str = "main") -> Flask:
 
 
 if __name__ == "__main__":
-    flask_app = create_app(env="prod")
+    flask_app = create_app()
     flask_app.run()

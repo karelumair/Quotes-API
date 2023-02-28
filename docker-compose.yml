@@ -9,8 +9,12 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_db?authSource=admin
-      - MONGO_TEST_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_test_db?authSource=admin
+      - MONGODB_HOST=host.docker.internal
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - MONGODB_USERNAME=${MONGODB_USERNAME}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - ENV=${ENV}
       - LOG_FILE=logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
@@ -22,8 +26,12 @@ services:
     command: "celery -A make_celery worker --loglevel=info"
     restart: always
     environment:
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_db?authSource=admin
-      - MONGO_TEST_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@host.docker.internal:27017/quotes_test_db?authSource=admin
+      - MONGODB_HOST=host.docker.internal
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - MONGODB_USERNAME=${MONGODB_USERNAME}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - ENV=${ENV}
       - LOG_FILE=logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
