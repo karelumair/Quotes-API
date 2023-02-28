@@ -5,7 +5,6 @@ from flask import Flask
 from flask_restful import Api
 from flask_apscheduler import APScheduler
 from database.db import init_db
-from resources.error_handler import bad_request, error_handler_blueprint
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
@@ -47,10 +46,6 @@ def create_app(env: str = "test", context: str = "main") -> Flask:
     @app.route("/health/")
     def health_check():
         return {"status": "ok"}
-
-    # Error Handlers
-    app.register_blueprint(error_handler_blueprint)
-    app.register_error_handler(400, bad_request)
 
     # Schedule Tasks
     if context == "main":
