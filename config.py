@@ -1,31 +1,43 @@
 """Contains all the configuration of the Flask App"""
 
-import os
-from dotenv import load_dotenv, find_dotenv
-
-load_dotenv(find_dotenv())
-
-MONGO_URI = os.environ.get("MONGO_URI")
-MONGO_TEST_URI = os.environ.get("MONGO_TEST_URI")
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
+from os import environ
+from pydantic import BaseSettings
 
 
-CONFIG = {
-    "test": {
-        "MONGODB_SETTINGS": {"host": MONGO_TEST_URI},
-        "CELERY": {
-            "broker_url": CELERY_BROKER_URL,
-            "result_backend": CELERY_BROKER_URL,
-        },
-        # This mode ensures exceptions are propagated rather than handled by the app's error handlers.
-        "TESTING": True,
-    },
-    "prod": {
-        "MONGODB_SETTINGS": {"host": MONGO_URI},
-        "CELERY": {
-            "broker_url": CELERY_BROKER_URL,
-            "result_backend": CELERY_BROKER_URL,
-        },
-    },
+class GlobalConfig(BaseSettings):
+    """Global Configurations"""
+
+    MONGODB_SETTINGS: list = [
+        {
+            "HOST": environ.get("MONGODB_HOST", "localhost"),
+            "PORT": environ.get("MONGODB_PORT", 27017),
+            "DB": environ.get("MONGODB_DATABASE"),
+            "USERNAME": environ.get("MONGODB_USERNAME"),
+            "PASSWORD": environ.get("MONGODB_PASSWORD"),
+        }
+    ]
+    CELERY: dict = {
+        "BROKER_URL": environ.get("CELERY_BROKER_URL"),
+        "RESULT_BACKEND": environ.get("CELERY_RESULT_BACKEND"),
+    }
+
+
+class DevConfig(GlobalConfig):
+    """Development Configurations"""
+
+    DEBUG: bool = True
+
+
+class TestConfig(GlobalConfig):
+    """Test Configurations"""
+
+    TESTING: bool = True
+
+
+configs = {
+    "dev": DevConfig().dict(),
+    "test": TestConfig().dict(),
+    "prod": GlobalConfig().dict(),
 }
+
+CONFIG = configs[environ.get("ENV", "prod")]
