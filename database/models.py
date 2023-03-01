@@ -3,6 +3,7 @@
 import datetime
 from database.db import db
 from constants.app_constants import SCRAPED_DATA_CLEAN_UP_DURATION
+from utils.utils import ScrapingTask
 
 
 class Author(db.Document):
@@ -71,3 +72,13 @@ class Quote(db.Document):
         obj["_id"] = str(obj["_id"])
         obj["author"] = {"name": self.author.name, "id": str(self.author.id)}
         return obj
+
+
+class ScheduledTask(db.Document):
+    """Scheduled Tasks Model"""
+
+    jobId = db.StringField()
+    celeryTask = db.StringField()
+    description = db.StringField()
+    status = db.DictField(default=ScrapingTask().to_dict())
+    meta = {"collection": "scheduledTasks"}

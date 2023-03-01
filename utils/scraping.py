@@ -2,14 +2,15 @@
 
 
 import re
+import time
 from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
 from celery import shared_task
 from selenium.webdriver.common.by import By
 from mongoengine.errors import NotUniqueError
-from utils.utils import init_driver, get_date
-from database.models import ScrapedAuthor, Author, Quote
+from utils.utils import init_driver, get_date, ScrapingTask, TaskStatus
+from database.models import ScrapedAuthor, Author, Quote, ScheduledTask
 from constants.app_constants import QUOTES_URL
 
 
@@ -23,9 +24,19 @@ def scrape_data(self, single_page: bool = False) -> dict:
     Returns:
         dict: dict of no. of fetched records
     """
+    # Wait till task not saved to database
+    time.sleep(1)
+
+    scheduled_task = ScheduledTask.objects.get(celeryTask=self.request.id)
+    task = ScrapingTask(task=scheduled_task)
+
+    task.update(quote=TaskStatus.IN_PROGRESS)
     quote_status = scrape_quotes(self, single_page)
+
+    task.update(quote=TaskStatus.SUCCESS, author=TaskStatus.IN_PROGRESS)
     author_status = scrape_authors(self)
 
+    task.update(quote=TaskStatus.SUCCESS, author=TaskStatus.SUCCESS)
     return {"quotes": quote_status, "authors": author_status}
 
 
