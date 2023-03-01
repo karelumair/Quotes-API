@@ -2,8 +2,9 @@
 
 from flask import make_response, jsonify, current_app
 from flask_restful import Resource
+from celery import states
 from celery.result import AsyncResult
-from utils.scraping import scrape_data
+from services.scraper.scraper import scrape_data
 from utils.celery_app import check_celery_available
 
 
@@ -50,9 +51,13 @@ class ScrapeStatus(Resource):
 
         task_result = AsyncResult(task_id)
         result = {"task_status": "Task id does not exists"}
-        if task_result.status != "PENDING":
+
+        if task_result.status == states.FAILURE:
+            return {"task_status": "FAILED"}
+
+        if task_result.status != states.PENDING:
             result["task_status"] = task_result.status
-            result.update(task_result.result)
+            result |= task_result.result
 
         current_app.logger.info(f"GET Scrape Status - Status: {task_result.status}")
         return make_response(jsonify(result), 200)

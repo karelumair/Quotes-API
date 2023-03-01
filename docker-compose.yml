@@ -2,6 +2,7 @@ version: "3.7"
 services:
   web:
     build:
+      context: .
       dockerfile: Dockerfile
     restart: always
     ports:
@@ -17,6 +18,7 @@ services:
 
   celery-worker:
     build:
+      context: .
       dockerfile: Dockerfile
     entrypoint: "poetry run"
     command: "celery -A make_celery worker --loglevel=info"
