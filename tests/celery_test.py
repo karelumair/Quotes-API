@@ -2,7 +2,7 @@
 
 import pytest
 from app import create_app
-from utils.scraping import scrape_data
+from services.scraper.scraper import scrape_data
 
 
 @pytest.fixture(scope="session")
@@ -24,7 +24,7 @@ def make_app(request):
 
 
 @pytest.fixture(scope="session")
-def make_celery(make_app):
+def make_celery(make_app):  # pylint: disable=W0613,W0621
     """Create celery app for testing
 
     Args:
@@ -40,7 +40,7 @@ def make_celery(make_app):
     return celery
 
 
-def test_scrape_data(make_celery, celery_worker):
+def test_scrape_data(make_celery, celery_worker):  # pylint: disable=W0613,W0621
     """Test Case for Scraping Quotes
 
     Args:

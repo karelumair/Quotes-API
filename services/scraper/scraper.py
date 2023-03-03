@@ -2,16 +2,52 @@
 
 
 import re
-import time
+import traceback
 from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
-from celery import shared_task
+from celery import shared_task, states
+from celery.exceptions import Ignore
 from selenium.webdriver.common.by import By
 from mongoengine.errors import NotUniqueError
-from utils.utils import init_driver, get_date, ScrapingTask, TaskStatus
+from utils.utils import init_driver, get_date
 from database.models import ScrapedAuthor, Author, Quote, ScheduledTask
 from constants.app_constants import QUOTES_URL
+from services.scraper.utils import ScrapingTask, TaskStatus
+
+
+@shared_task(bind=True)
+def scrape_data_scheduler(self, task_id: str) -> dict:
+    """This function scrape quotes and authors data as scheduled tasks.
+
+    Args:
+        single_page (bool): bool to scrape only single page
+
+    Returns:
+        dict: dict of no. of fetched records
+    """
+    scheduled_task = ScheduledTask.objects.get(id=task_id)
+    scheduled_task.update(celeryTask=self.request.id)
+
+    task_status = ScrapingTask(task=scheduled_task)
+
+    task_status.update(quote=TaskStatus.IN_PROGRESS)
+    try:
+        quote_status = scrape_quotes(self, single_page=False)
+        task_status.update(quote=TaskStatus.SUCCESS)
+    except Exception:
+        quote_status = self.AsyncResult(self.request.id).info
+        task_status.update(quote=TaskStatus.FAILED)
+
+    task_status.update(author=TaskStatus.IN_PROGRESS)
+    try:
+        author_status = scrape_authors(self)
+        task_status.update(author=TaskStatus.SUCCESS)
+    except Exception:
+        author_status = self.AsyncResult(self.request.id).info
+        task_status.update(author=TaskStatus.FAILED)
+
+    return {"quotes": quote_status, "authors": author_status}
 
 
 @shared_task(bind=True)
@@ -24,19 +60,19 @@ def scrape_data(self, single_page: bool = False) -> dict:
     Returns:
         dict: dict of no. of fetched records
     """
-    # Wait till task not saved to database
-    time.sleep(1)
+    try:
+        quote_status = scrape_quotes(self, single_page)
+        author_status = scrape_authors(self)
+    except Exception as exp_err:
+        self.update_state(
+            state=states.FAILURE,
+            meta={
+                "exc_type": type(exp_err).__name__,
+                "exc_message": traceback.format_exc().split("\n"),
+            },
+        )
+        raise Ignore() from exp_err
 
-    scheduled_task = ScheduledTask.objects.get(celeryTask=self.request.id)
-    task = ScrapingTask(task=scheduled_task)
-
-    task.update(quote=TaskStatus.IN_PROGRESS)
-    quote_status = scrape_quotes(self, single_page)
-
-    task.update(quote=TaskStatus.SUCCESS, author=TaskStatus.IN_PROGRESS)
-    author_status = scrape_authors(self)
-
-    task.update(quote=TaskStatus.SUCCESS, author=TaskStatus.SUCCESS)
     return {"quotes": quote_status, "authors": author_status}
 
 
@@ -49,6 +85,11 @@ def scrape_quotes(self, single_page: bool) -> dict:
     Returns:
         dict: dict of no. of fetched records
     """
+    self.update_state(
+        state="IN_PROGRESS",
+        meta={"scraping": "quotes", "fetched_records": 0},
+    )
+
     driver = init_driver()
     driver.get(QUOTES_URL)
 
@@ -133,6 +174,14 @@ def scrape_authors(self) -> dict:
     scraped_authors = ScrapedAuthor.objects()
     fetched_records = 0
 
+    self.update_state(
+        state="IN_PROGRESS",
+        meta={
+            "scraping": "authors",
+            "fetched_records": 0,
+            "total": len(scraped_authors),
+        },
+    )
     for author in scraped_authors:
         res = requests.get(author.link, timeout=10)
         soup = BeautifulSoup(res.content, features="html5lib")

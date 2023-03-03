@@ -3,7 +3,7 @@
 import datetime
 from database.db import db
 from constants.app_constants import SCRAPED_DATA_CLEAN_UP_DURATION
-from utils.utils import ScrapingTask
+from services.scraper.utils import ScrapingTask
 
 
 class Author(db.Document):

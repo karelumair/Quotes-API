@@ -10,7 +10,7 @@ from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
 from utils.logger import init_logger
 from utils.celery_app import init_celery
-from utils.scheduler import init_scheduler_jobs
+from services.scraper.scheduler import init_scheduler_jobs
 from config import CONFIG
 
 
@@ -41,7 +41,7 @@ def create_app(context: str = "main") -> Flask:
 
     # Health check
     @app.route("/health/")
-    def health_check():
+    def health_check() -> dict:
         return {"status": "ok"}
 
     # Schedule Tasks
