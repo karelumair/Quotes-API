@@ -23,12 +23,18 @@ class QuoteTest(unittest.TestCase):
     def test_create_quote(self):
         """Test for create Quote"""
 
-        author_id = Author.objects().first().id
+        author = Author(
+            name="Test User",
+            dob="2000-12-1",
+            country="India",
+            description="Testing....",
+        )
+        author.save()
 
         data = {
             "quote": "All code is guilty, until proven innocent.",
             "tags": ["code", "testing"],
-            "author": str(author_id),
+            "author": str(author.id),
         }
         response = self.client.post("/quotes/", json=data)
         self.assertEqual(response.status_code, 201)
@@ -88,13 +94,14 @@ class QuoteTest(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("Error", response.get_json())
 
-    def test_delete_quote(self):
+    def test_zdelete_quote(self):
         """Test for deleting Quote ID"""
 
         response = self.client.delete(f"/quotes/{self.quote_id}/")
+        Author.objects().first().delete()
         self.assertEqual(response.status_code, 204)
 
-    def test_delete_invalid_quote_id(self):
+    def test_zdelete_invalid_quote_id(self):
         """Test for deleting invalid Quote ID"""
 
         response = self.client.delete("/quotes/63bfb6768a1d693e61cd/")

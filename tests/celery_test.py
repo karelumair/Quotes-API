@@ -3,6 +3,7 @@
 import pytest
 from app import create_app
 from services.scraper.scraper import scrape_data
+from database.models import Author, ScrapedAuthor
 
 
 @pytest.fixture(scope="session")
@@ -17,6 +18,8 @@ def make_app(request):
     ctx.push()
 
     def teardown():
+        Author.objects.delete()
+        ScrapedAuthor.objects.delete()
         ctx.pop()
 
     request.addfinalizer(teardown)
