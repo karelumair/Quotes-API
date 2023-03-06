@@ -1,9 +1,10 @@
 """All the Authors API endpoints"""
 
 from datetime import datetime, timezone
-from flask import request, Response, jsonify, make_response, current_app
+from flask import Response, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
+from flask_pydantic import validate
 from database.models import Author
 from database.schemas import AuthorSchema, AuthorUpdateSchema
 from utils.utils import cursor_to_json
@@ -26,7 +27,8 @@ class AuthorsApi(Resource):
         current_app.logger.info(f"GET Authors - FETCHED {len(authors)} Authors")
         return make_response(jsonify(authors), 200)
 
-    def post(self) -> Response:
+    @validate()
+    def post(self, body: AuthorSchema) -> Response:
         """Create new Author
 
         Returns:
@@ -35,17 +37,14 @@ class AuthorsApi(Resource):
         current_app.logger.info("POST Author - REQUEST RECEIVED")
 
         try:
-            body = request.get_json()
-
-            author_validate = AuthorSchema(**body)
-            author = Author(**author_validate.dict(), createdBy="author")
+            author = Author(**body.dict(), createdBy="author")
             author.save()
 
             response, status = author.to_json(), 201
             current_app.logger.info(f"POST Author - ADDED Author Id:{author.id}")
         except NotUniqueError:
             response, status = {"Error": "Author Name Already Exist"}, 400
-            current_app.logger.error("POST Author - DUPLICATE QUOTE")
+            current_app.logger.error("POST Author - DUPLICATE AUTHOR NAME")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"POST Author - {str(exp_err)}")
@@ -77,7 +76,8 @@ class AuthorApi(Resource):
 
         return make_response(jsonify(response), status)
 
-    def put(self, author_id: str) -> Response:
+    @validate()
+    def put(self, author_id: str, body: AuthorUpdateSchema) -> Response:
         """Update single Author with given id
 
         Args:
@@ -89,20 +89,17 @@ class AuthorApi(Resource):
         current_app.logger.info(f"PUT Author Id:{author_id} - RECEIVED REQUEST")
 
         try:
-            body = request.get_json()
-            body["updatedOn"] = datetime.now(timezone.utc)
-
-            author_validate = AuthorUpdateSchema(**body)
-            update_values = {
-                k: v for k, v in author_validate.dict().items() if v is not None
-            }
-            Author.objects.get(id=author_id).update(**update_values, updatedBy="author")
+            Author.objects.get(id=author_id).update(
+                **body.dict(exclude_unset=True),
+                updatedOn=datetime.now(timezone.utc),
+                updatedBy="author",
+            )
 
             response, status = {"id": author_id}, 200
             current_app.logger.info(f"PUT Author Id:{author_id} - UPDATED")
         except NotUniqueError:
             response, status = {"Error": "Author Name Already Exist"}, 400
-            current_app.logger.error("POST Author - DUPLICATE QUOTE")
+            current_app.logger.error("POST Author - DUPLICATE AUTHOR NAME")
         except DoesNotExist:
             response, status = {"Error": "Author with given id Does Not Exist!"}, 404
             current_app.logger.error(f"PUT Author Id:{author_id} - NOT FOUND")

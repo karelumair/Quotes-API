@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from flask import Response, request, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
+from flask_pydantic import validate
 from database.models import Quote, Author
 from database.schemas import QuoteSchema, QuoteUpdateSchema
 from utils.utils import cursor_to_json, quote_aggregate_to_json
@@ -65,7 +66,8 @@ class QuotesApi(Resource):
 
         return make_response(jsonify(quotes), 200)
 
-    def post(self) -> Response:
+    @validate()
+    def post(self, body: QuoteSchema) -> Response:
         """Create new Quote
 
         Returns:
@@ -74,12 +76,10 @@ class QuotesApi(Resource):
         current_app.logger.info("POST Quote - REQUEST RECEIVED")
 
         try:
-            body = request.get_json()
-
-            quote_validate = QuoteSchema(**body)
-            quote = Quote(**quote_validate.dict(), createdBy="author")
             # Check if author exists else throw DoesNotExist exception
-            Author.objects.get(id=quote_validate.author)
+            Author.objects.get(id=body.author)
+
+            quote = Quote(**body.dict(), createdBy="author")
             quote.save()
 
             response, status = quote.to_json(), 201
@@ -89,9 +89,7 @@ class QuotesApi(Resource):
             current_app.logger.error("POST Quote - DUPLICATE QUOTE")
         except DoesNotExist:
             response, status = {"Error": "Author id Does Not Exist!"}, 404
-            current_app.logger.error(
-                f"POST Quote - Author Id:{quote_validate.author} NOT FOUND"
-            )
+            current_app.logger.error(f"POST Quote - Author Id:{body.author} NOT FOUND")
         except Exception as exp_err:
             response, status = {"Error": str(exp_err)}, 400
             current_app.logger.error(f"POST Quote - {str(exp_err)}")
@@ -102,7 +100,8 @@ class QuotesApi(Resource):
 class QuoteApi(Resource):
     """GET Detail, PUT, and DELETE API for Quotes"""
 
-    def put(self, quote_id: str) -> Response:
+    @validate()
+    def put(self, quote_id: str, body: QuoteUpdateSchema) -> Response:
         """Update single Quote with given id
 
         Args:
@@ -114,14 +113,11 @@ class QuoteApi(Resource):
         current_app.logger.info(f"PUT Quote Id:{quote_id} - RECEIVED REQUEST")
 
         try:
-            body = request.get_json()
-            body["updatedOn"] = datetime.now(timezone.utc)
-
-            quote_validate = QuoteUpdateSchema(**body)
-            update_values = {
-                k: v for k, v in quote_validate.dict().items() if v is not None
-            }
-            Quote.objects.get(id=quote_id).update(**update_values, updatedBy="author")
+            Quote.objects.get(id=quote_id).update(
+                **body.dict(exclude_unset=True),
+                updatedOn=datetime.now(timezone.utc),
+                updatedBy="author",
+            )
 
             response, status = {"id": quote_id}, 200
             current_app.logger.info(f"PUT Quote Id:{quote_id} - UPDATED")
