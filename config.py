@@ -10,16 +10,17 @@ class GlobalConfig(BaseSettings):
     MONGODB_SETTINGS: list = [
         {
             "HOST": environ.get("MONGODB_HOST", "localhost"),
-            "PORT": environ.get("MONGODB_PORT", 27017),
+            "PORT": int(environ.get("MONGODB_PORT", 27017)),
             "DB": environ.get("MONGODB_DATABASE"),
             "USERNAME": environ.get("MONGODB_USERNAME"),
             "PASSWORD": environ.get("MONGODB_PASSWORD"),
         }
     ]
     CELERY: dict = {
-        "BROKER_URL": environ.get("CELERY_BROKER_URL"),
-        "RESULT_BACKEND": environ.get("CELERY_RESULT_BACKEND"),
+        "broker_url": environ.get("CELERY_BROKER_URL"),
+        "result_backend": environ.get("CELERY_RESULT_BACKEND"),
     }
+    LIMITER_STORAGE_URI: str = environ.get("LIMITER_STORAGE_URI")
 
 
 class DevConfig(GlobalConfig):

@@ -10,6 +10,7 @@ from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
 from utils.logger import init_logger
 from utils.celery_app import init_celery
+from utils.rate_limiter import init_limiter
 from services.scraper.scheduler import init_scheduler_jobs
 from config import CONFIG
 
@@ -29,6 +30,9 @@ def create_app(context: str = "main") -> Flask:
 
     # Initialize Celery
     init_celery(app)
+
+    # Rate Limiter
+    init_limiter(app)
 
     # Routes
     api = Api(app)

@@ -6,12 +6,15 @@ from celery import states
 from celery.result import AsyncResult
 from services.scraper.scraper import scrape_data
 from utils.celery_app import check_celery_available
+from utils.rate_limiter import limiter
+from constants.app_constants import SCRAPER_RATE_LIMIT
 
 
 class ScrapeDataApi(Resource):
     """API for Scraping Quotes"""
 
     @check_celery_available
+    @limiter.limit(SCRAPER_RATE_LIMIT)
     def get(self):
         """Scrape and add data to the database
 
