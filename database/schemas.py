@@ -1,9 +1,8 @@
 """Schema's for Data Validation"""
 
-import datetime
 from typing import Optional
 from bson import ObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 
 class MongoObjectId(ObjectId):
@@ -38,7 +37,6 @@ class AuthorUpdateSchema(BaseModel):
     dob: Optional[str]
     country: Optional[str]
     description: Optional[str]
-    updatedOn: Optional[datetime.datetime]
 
 
 class QuoteSchema(BaseModel):
@@ -49,10 +47,18 @@ class QuoteSchema(BaseModel):
     scrapedAuthor: Optional[MongoObjectId]
     tags: list
 
+    @root_validator(pre=True)
+    @classmethod
+    def check_author_or_scraped_author(cls, values):
+        """Check if document contains either author or scrapedAuthor"""
+
+        if not (values.get("author") or values.get("scrapedAuthor")):
+            raise ValueError("Quote must have either an author or scraped author")
+        return values
+
 
 class QuoteUpdateSchema(BaseModel):
     """Pydantic schema for updating Quote"""
 
     quote: Optional[str]
     tags: Optional[list]
-    updatedOn: Optional[datetime.datetime]
