@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    entrypoint: "poetry run"
+    command: "gunicorn -w 4 wsgi:flask_app -b 0.0.0.0:5000"
     restart: always
     ports:
      - 5000:5000
@@ -19,6 +21,7 @@ services:
       - LOG_FILE=logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
+      - LIMITER_STORAGE_URI=redis://redis
 
   celery-worker:
     build:
@@ -37,6 +40,7 @@ services:
       - LOG_FILE=logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
+      - LIMITER_STORAGE_URI=redis://redis
     links:
       - redis
     depends_on:

@@ -18,5 +18,3 @@ RUN apk add chromium-chromedriver
 RUN pip install poetry==1.3.1
 COPY poetry.lock pyproject.toml code/
 RUN poetry install
-
-CMD ["poetry", "run", "flask", "run", "--host=0.0.0.0"]
