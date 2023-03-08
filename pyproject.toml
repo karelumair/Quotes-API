@@ -25,6 +25,7 @@ pytest-celery = "^0.0.0"
 flask-apscheduler = "^1.12.4"
 flask-pydantic = "^0.11.0"
 flask-limiter = "^3.3.0"
+gunicorn = "^20.1.0"
 
 [tool.pylint.messages_control]
 disable = "E1101, W0718"
