@@ -8,6 +8,7 @@ from database.db import init_db
 from resources.quote import QuotesApi, QuoteApi
 from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus
+from resources.stats import StatsApi
 from utils.logger import init_logger
 from utils.celery_app import init_celery
 from utils.rate_limiter import init_limiter
@@ -42,6 +43,7 @@ def create_app(context: str = "main") -> Flask:
     api.add_resource(AuthorApi, "/authors/<author_id>/")
     api.add_resource(ScrapeDataApi, "/scrape/data/")
     api.add_resource(ScrapeStatus, "/scrape/tasks/<task_id>/")
+    api.add_resource(StatsApi, "/stats/")
 
     # Health check
     @app.route("/health/")
