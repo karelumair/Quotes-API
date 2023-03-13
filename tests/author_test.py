@@ -77,13 +77,13 @@ class AuthorTest(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("Error", response.get_json())
 
-    def test_delete_author(self):
+    def test_zdelete_author(self):
         """Test for deleting Author ID"""
 
         response = self.client.delete(f"/authors/{self.author_id}/")
         self.assertEqual(response.status_code, 204)
 
-    def test_delete_invalid_author_id(self):
+    def test_zdelete_invalid_author_id(self):
         """Test for deleting invalid Author ID"""
 
         response = self.client.delete("/authors/63bfb6768a1d693e61cd/")
