@@ -39,7 +39,7 @@ class AuthorTest(unittest.TestCase):
         data = {"name": "In Complete", "description": "This is an incomplete body"}
         response = self.client.post("/authors/", json=data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn("Error", response.get_json())
+        self.assertIn("validation_error", response.get_json())
 
     def test_get_author(self):
         """Test for get Author"""
@@ -73,7 +73,10 @@ class AuthorTest(unittest.TestCase):
     def test_update_invalid_author_id(self):
         """Test for invalid Author ID"""
 
-        response = self.client.put("/authors/63bfb6768a1d693e61cd/")
+        data = {
+            "name": "Test User",
+        }
+        response = self.client.put("/authors/63bfb6768a1d693e61cd/", json=data)
         self.assertEqual(response.status_code, 400)
         self.assertIn("Error", response.get_json())
 
