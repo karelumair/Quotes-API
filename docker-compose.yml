@@ -7,18 +7,18 @@ services:
     entrypoint: "poetry run"
     command: "gunicorn -w 4 wsgi:flask_app -b 0.0.0.0:5000"
     restart: always
-    ports:
-     - 5000:5000
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./logs:/api/logs
+    network_mode: host
     environment:
-      - MONGODB_HOST=host.docker.internal
-      - MONGODB_PORT=27017
+      - SERVER_NAME=0.0.0.0
+      - MONGODB_HOST=${MONGODB_HOST}
+      - MONGODB_PORT=${MONGODB_PORT}
       - MONGODB_DATABASE=${MONGODB_DATABASE}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - ENV=${ENV}
-      - LOG_FILE=logs.log
+      - LOG_FILE=logs/logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
       - LIMITER_STORAGE_URI=redis://redis
@@ -30,14 +30,17 @@ services:
     entrypoint: "poetry run"
     command: "celery -A make_celery worker --loglevel=info"
     restart: always
+    volumes:
+      - ./logs:/api/logs
     environment:
-      - MONGODB_HOST=host.docker.internal
-      - MONGODB_PORT=27017
+      - SERVER_NAME=0.0.0.0
+      - MONGODB_HOST=${MONGODB_HOST}
+      - MONGODB_PORT=${MONGODB_PORT}
       - MONGODB_DATABASE=${MONGODB_DATABASE}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - ENV=${ENV}
-      - LOG_FILE=logs.log
+      - LOG_FILE=logs/logs.log
       - CELERY_BROKER_URL=redis://redis
       - CELERY_RESULT_BACKEND=redis://redis
       - LIMITER_STORAGE_URI=redis://redis
@@ -47,5 +50,15 @@ services:
       - redis
 
   redis:
-      image: redis
-      restart: "always"
+    image: redis
+    restart: always
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    volumes:
+      - ./logs/nginx:/var/log/nginx
+    environment:
+      - SERVER_NAME=0.0.0.0
+    restart: always
+    network_mode: host

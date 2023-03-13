@@ -4,6 +4,7 @@ __pycache__
 
 # This file stores main app logs
 logs.log
+logs/
 # This file stores selenium geckodriver logs
 geckodriver.log
 # This folder contains selenium driver program which doesn't need to be included.

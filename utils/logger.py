@@ -23,4 +23,5 @@ def init_logger(logr: logging.Logger) -> None:
     file_handler = logging.FileHandler(LOG_FILE)
     file_handler.setFormatter(formatter)
 
+    logr.setLevel(logging.DEBUG)
     logr.addHandler(file_handler)
