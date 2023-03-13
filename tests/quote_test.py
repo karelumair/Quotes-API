@@ -56,7 +56,7 @@ class QuoteTest(unittest.TestCase):
         data = {"quote": "This must fail", "tags": "123"}
         response = self.client.post("/quotes/", json=data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn("Error", response.get_json())
+        self.assertIn("validation_error", response.get_json())
 
     def test_get_quote(self):
         """Test for get Quote"""
@@ -90,7 +90,8 @@ class QuoteTest(unittest.TestCase):
     def test_update_invalid_quote_id(self):
         """Test for invalid Quote ID"""
 
-        response = self.client.put("/quotes/63bfb6768a1d693e61cd/")
+        data = {"quote": "All code is guilty, until proven innocent."}
+        response = self.client.put("/quotes/63bfb6768a1d693e61cd/", json=data)
         self.assertEqual(response.status_code, 400)
         self.assertIn("Error", response.get_json())
 
