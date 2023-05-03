@@ -1,0 +1,358 @@
+Flask
+    app_context
+        importing the app instance within the modules in your project is prone to circular import issues.
+        When using the app factory pattern or writing reusable blueprints or extensions there won’t be an app instance to import at all.
+        Flask solves this issue with the application context.
+        Rather than referring to an app directly, you use the current_app proxy, which points to the application handling the current activity.
+
+    blueprints
+        Flask uses a concept of blueprints for making application components and supporting common patterns within an application or across applications.
+        A Blueprint object works similarly to a Flask application object, but it is not actually an application.
+        Rather it is a blueprint of how to construct or extend an application.
+
+        """The basic concept of blueprints is that they record operations to execute when registered on an application."""
+
+    extensions
+        Extensions are extra packages that add functionality to a Flask application.
+        In our case, This can be used to get the Celery app from the Flask app returned by the factory.
+
+
+mongodb URI authSource:
+    Specify the database name associated with the user's credentials.
+    in our case authSource is specified to admin database i.e the user credentials are authenticated against the admin database.
+
+Celery
+    Celery uses a message broker like RabbitMQ, Redis etc. to facilitate communication between Celery worker and the web application.
+    Messages are added to the broker, which are then processed by the worker(s).
+    Once done, the results are added to the backend.
+
+
+    .set_default():
+        The Celery app is set as the default, so that it is seen during each request.
+
+    @shared_task decorator:
+        This creates task objects that will access whatever the “current app” is, which is a similar concept to Flask’s blueprints and app context.
+        This is why we use .set_default()
+
+    bind=True
+        The bind argument means that the function will be a “bound method” so that you can access attributes and methods on the task type instance.
+        extend functionality as Task instance
+
+    backend.store_result
+        Update task state and result.
+        store_result(task_id=headers["id"], result=None, state="IN_PROGRESS")
+
+
+Redis server runs on TCP Port 6379.
+
+
+Decorators:
+    When we use a decorator, we're replacing one function with another.
+    That's why we have functools.wraps.
+
+    functool -> @wraps:
+        This takes a function used in a decorator and adds the functionality of copying over the function name, docstring, arguments list, etc.
+        And wraps is itself a decorator
+
+
+The __init__.py
+    files are required to make Python treat directories containing the file as packages.
+
+
+#NOQA = NO-QA (NO Quality Assurance)
+
+
+
+
+Pytest Fixtures:
+--------------------------------------------------------------------------------------
+    test can be broken down into four steps:
+        Arrange
+        Act
+        Assert
+        Cleanup
+
+    > “Fixtures”, in the literal sense, are each of the arrange steps and data.
+    > They’re everything that test needs to do its thing.
+    > Tests can depend on as many fixtures as you want, and fixtures can use other fixtures, as well.
+    > This is where pytest’s fixture system really shines.
+
+    how do we tell pytest what tests and fixtures need which fixtures?
+    > At a basic level, test functions request fixtures by declaring them as arguments
+
+    Fixture scopes
+        Fixtures are created when first requested by a test, and are destroyed based on their scope:
+
+        function: the default scope, the fixture is destroyed at the end of the test.
+        class: the fixture is destroyed during teardown of the last test in the class.
+        module: the fixture is destroyed during teardown of the last test in the module.
+        package: the fixture is destroyed during teardown of the last test in the package.
+        session: the fixture is destroyed at the end of the test session.
+
+request.addfinalizer(func):
+    teardown code by accepting a request-context object into your fixture function and
+    calling its request.addfinalizer(func) method with a function that performs the teardown one or multiple times:
+
+
+
+Execution order of Fixtures
+    basic execution order: session > package > module > class > function.
+
+
+Example code:
+
+    @pytest.fixture(scope="session")
+    def session():
+        logging.info("scope session")
+
+    @pytest.fixture(scope="package")
+    def package():
+        logging.info("scope package")
+
+    @pytest.fixture(scope="module")
+    def module():
+        logging.info("scope module")
+
+    @pytest.fixture(scope="class")
+    def class_():
+        logging.info("scope class")
+
+    @pytest.fixture(scope="function")
+    def function():
+        logging.info("scope function")
+
+    def test_order(module, class_, session, function, package):
+        assert True
+
+    # test/test_code1.py::test_order
+    # ---------------- live log setup ----------------
+    # INFO     root:test_code1.py:8 scope session
+    # INFO     root:test_code1.py:13 scope package
+    # INFO     root:test_code1.py:18 scope module
+    # INFO     root:test_code1.py:23 scope class
+    # INFO     root:test_code1.py:28 scope function
+    # PASSED
+
+
+
+
+
+
+MongoDB
+----------------------------------------------------
+
+$sort
+    modifier orders the elements of an array during a $push operation.
+    it must appear with the $each modifier.
+    You can pass an empty array [] to the $each modifier such that only the $sort modifier has an effect.
+
+
+
+This query updated updatedBy field to "eolRefreshService" and updates the updateTimeStamp also it appends or add values in statusPayload to statuses.
+If the requestId doesn't exists already then it creates new fields createdBy and createdTimeStamp
+
+
+Docker
+
+    set bindIp: 0.0.0.0 in /etc/mongod.conf
+
+
+# mongodb:
+#   image: mongo:6.0.3
+#   container_name: mongodb
+#   restart: always
+#   command: mongod --auth
+#   environment:
+#     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+#     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+
+# from enum import Enum
+
+# class TaskStatus(Enum):
+#      SUCCESS: str = "SUCCESS"
+#      FAILED: str = "FAILED"
+#      IN_PROGRESS: str = "IN_PROGRESS"
+
+
+# TaskStatus.SUCCESS.value
+
+current_app.logger.info("SCHEDULED TASK Scrape Data - REQUESTED")
+
+        try:
+            task = func.delay()
+            scheduled_task = ScheduledTask(jobId=job_id, celeryTask=task.id, description="scrape_data")
+            scheduled_task.save()
+            current_app.logger.info(f"SCHEDULED TASK Scrape Data Id: {job_id} - SUBMITTED")
+        except Exception as exp_err:
+            current_app.logger.error(f"SCHEDULED TASK Scrape Data - {str(exp_err)}")
+
+
+
+MONGO_URI=mongodb://umair:umongoad@localhost:27017/quotes_db?authSource=admin
+MONGO_TEST_URI=mongodb://umair:umongoad@localhost:27017/quotes_test_db?authSource=admin
+LOG_FILE=logs.log
+SELENIUM_DRIVER=selenium_driver_path
+CELERY_BROKER_URL=redis://localhost
+CELERY_RESULT_BACKEND=redis://localhost
+
+
+
+
+Github Actions:
+----------------------------------------------------------------
+> platform to automate dev. workflows
+> CI/CD is one of the many workflows (Github action is not CI/CD)
+
+> Workflow:
+    - issue
+    - fix -> PR
+    - prepare release notes (deploy)
+
+> When something happens IN or TO the repository -> automatic Actions are executed in response.
+> The things happening in repo are called events. (issue, PR, merge, contr. joined etc..)
+> Flow
+    - listen to events
+    - trigger a workflow
+    Ex. issue created -> sort, label, assign it etc. (These are called Actions)
+
+> Chain of actions forms a workflow
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------
+
+
+API Rate Limiting (Throttling)
+    It is the process of limiting the number of API requests a user can make in a certain period.
+
+    Response Code: 429 - Too Many Requests
+
+
+    Cases
+        Case I: backend can handle lot of req but frontend can't or vice versa.
+            Sol 1: upgrade sys to match both
+            Sol 2: downgrade sys to match both (rate limit)
+
+        Case II: Public APIs
+            apply rate limit on the basis of the API keys.
+
+        Case III: critical service -> don't want to apply rate limit.
+            have a default/fallback plan.
+            instead of response 429 send 504 - out of resources
+
+
+    Techniques: (https://www.tibco.com/reference-center/what-is-api-throttling)
+        Fixed Window:
+            allow only n no. of request in a given time.
+
+            draw back:
+                if consumed all n reqs at start of window then have to wait till the end of window.
+
+        Sliding Window:
+            window is slided based on requests.
+
+        Token Bucket
+            burst: size of bucket (no. of req sys capable of handling
+
+            sustain: refilling requests(token) (refill rate x/sec of min)
+
+        Leaky Bucket
+
+
+
+
+Service Discovery
+
+In microservices architecture there are multiple services deployed on different servers.
+How does one service know where the other service is depolyed?
+    hard code url?? -> Not a good idea.
+Ans -> Service Discovery
+
+    The idea is to have a discovery server, each service in the application registers
+    itself to the discovery server. The discovery server acts as the service registry, making notes.
+    This process of asking a discovery server to get to a service is called a service (location) discovery.
+
+    Two types:
+
+        Client Side:
+            - client makes first call to service registry to find the service needed
+            - then makes second call to the actual service discovered.
+            - Ex. Eureka
+
+            Dis. Adv.:
+                - client service has to make two calls.
+
+        Server Side:
+            - client makes request to service registry.
+            - the service registry transfers the request or redirect it to the required service.
+            - Ex. NGINX, AWS
+
+            Adv:
+                - client doesn't need to make multiple calls
+
+            Dis. Adv.:
+                - discovery server shud know how to do all this stuff and running all time.
+
+
+
+
+Microservices in Python
+
+    Why language choice matters in microservices development?
+        designed to operate as independently as possible, microservices must still communicate
+        and share data using various techniques. Rather than channel through a centralized messaging
+        system, services must communicate between themselves to perform discrete tasks and to scale
+        as needed.
+        This means that the language choosen for the microservices project should ideally support
+        a number of important communication formats and protocols. Any language used to create
+        microservices should support REST, which primarily relies on HTTP requests that post, read
+        and delete data.
+
+
+**Why language choice matters in microservices development?**
+- since microservices are designed to operate as independently as possible, they must still communicate and share data using various techniques.
+- Rather than communication via centralized messaging system, they must communicate between themselves to perform tasks and to scale as needed.
+- This is where language choice is important.
+- The language choosen for the microservices based application should ideally support a number of important communication formats and protocols.
+- Any language used to create  microservices should support REST, which primarily relies on HTTP requests that post, read and delete data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+class TagStats(Resource):
+
+    def get(self, n_tags: int):
+
+        try:
+            pipeline = [
+                {"$project": {"tags": 1}},
+                {"$unwind": "$tags"},
+                {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+                {"$sort": {"count": -1}},
+                {"$limit": int(n_tags)}
+            ]
+            cursor = Quote.objects(author__exists=True).aggregate(pipeline)
+            response, status = [tag["_id"] for tag in cursor], 200
+            current_app.logger.info(f"GET Tags Stats - FETCHED TOP {n_tags} Tags")
+        except ValueError:
+            response, status = {"Error": "Value must be of type int"}, 400
+            current_app.logger.info(f"GET Tags Stats - INVALID ARGUMENT {n_tags}")
+        except Exception as exp_err:
+            response, status = {"Error": str(exp_err)}, 400
+            current_app.logger.error(f"GET Tags Stats - {str(exp_err)}")
+
+        return make_response(jsonify(response), status)

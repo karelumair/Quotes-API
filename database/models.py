@@ -81,4 +81,10 @@ class ScheduledTask(db.Document):
     celeryTask = db.StringField()
     description = db.StringField()
     status = db.DictField(default=ScrapingTask().to_dict())
+    createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {"collection": "scheduledTasks"}
+
+    def to_json(self, *args, **kwargs):
+        obj = self.to_mongo().to_dict()
+        obj["_id"] = str(obj["_id"])
+        return obj

@@ -19,9 +19,9 @@ services:
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - ENV=${ENV}
       - LOG_FILE=logs/logs.log
-      - CELERY_BROKER_URL=redis://redis
-      - CELERY_RESULT_BACKEND=redis://redis
-      - LIMITER_STORAGE_URI=redis://redis
+      - CELERY_BROKER_URL=redis://localhost:3500
+      - CELERY_RESULT_BACKEND=redis://localhost:3500
+      - LIMITER_STORAGE_URI=redis://localhost:3500
 
   celery-worker:
     build:
@@ -32,6 +32,7 @@ services:
     restart: always
     volumes:
       - ./logs:/api/logs
+    network_mode: host
     environment:
       - SERVER_NAME=0.0.0.0
       - MONGODB_HOST=${MONGODB_HOST}
@@ -41,17 +42,15 @@ services:
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - ENV=${ENV}
       - LOG_FILE=logs/logs.log
-      - CELERY_BROKER_URL=redis://redis
-      - CELERY_RESULT_BACKEND=redis://redis
-      - LIMITER_STORAGE_URI=redis://redis
-    links:
-      - redis
-    depends_on:
-      - redis
+      - CELERY_BROKER_URL=redis://localhost:3500
+      - CELERY_RESULT_BACKEND=redis://localhost:3500
+      - LIMITER_STORAGE_URI=redis://localhost:3500
 
   redis:
     image: redis
     restart: always
+    ports:
+      - 3500:6379
 
   nginx:
     build: ./nginx

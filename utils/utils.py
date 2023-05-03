@@ -44,7 +44,8 @@ def quote_aggregate_to_json(cursor: CommandCursor) -> list:
 
     for doc in cursor:
         doc["_id"] = str(doc["_id"])
-        doc["author"]["_id"] = str(doc["author"]["_id"])
+        doc["author"]["id"] = str(doc["author"].pop("_id"))
+        doc["author"].pop("createdBy")
         quotes.append(doc)
 
     return quotes

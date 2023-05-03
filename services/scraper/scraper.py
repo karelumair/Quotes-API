@@ -16,24 +16,23 @@ from constants.app_constants import QUOTES_URL
 from services.scraper.utils import ScrapingTask, TaskStatus
 
 
-@shared_task(bind=True)
-def scrape_data_scheduler(self, task_id: str) -> dict:
-    """This function scrape quotes and authors data as scheduled tasks.
+def update_task_status(
+    self, scheduled_task: ScheduledTask, single_page: bool = False
+) -> dict:
+    """Update Tasks Status based on work completed
 
     Args:
+        scheduled_task (ScheduledTask): Task object to update status for
         single_page (bool): bool to scrape only single page
 
     Returns:
-        dict: dict of no. of fetched records
+        dict: dictionary of task statuses
     """
-    scheduled_task = ScheduledTask.objects.get(id=task_id)
-    scheduled_task.update(celeryTask=self.request.id)
-
     task_status = ScrapingTask(task=scheduled_task)
 
     task_status.update(quote=TaskStatus.IN_PROGRESS)
     try:
-        quote_status = scrape_quotes(self, single_page=False)
+        quote_status = scrape_quotes(self, single_page=single_page)
         task_status.update(quote=TaskStatus.SUCCESS)
     except Exception:
         quote_status = self.AsyncResult(self.request.id).info
@@ -51,6 +50,24 @@ def scrape_data_scheduler(self, task_id: str) -> dict:
 
 
 @shared_task(bind=True)
+def scrape_data_scheduler(self, task_id: str) -> dict:
+    """This function scrape quotes and authors data as scheduled tasks.
+
+    Args:
+        task_id (bool): scheduled task id
+
+    Returns:
+        dict: dict of no. of fetched records
+    """
+    scheduled_task = ScheduledTask.objects.get(id=task_id)
+    scheduled_task.update(celeryTask=self.request.id)
+
+    task_status = update_task_status(self, scheduled_task)
+
+    return task_status
+
+
+@shared_task(bind=True)
 def scrape_data(self, single_page: bool = False) -> dict:
     """This function scrape quotes and authors data at a time.
 
@@ -61,8 +78,11 @@ def scrape_data(self, single_page: bool = False) -> dict:
         dict: dict of no. of fetched records
     """
     try:
-        quote_status = scrape_quotes(self, single_page)
-        author_status = scrape_authors(self)
+        scraper_task = ScheduledTask(
+            celeryTask=self.request.id, description="scrape_data"
+        )
+        scraper_task.save()
+        task_status = update_task_status(self, scraper_task, single_page)
     except Exception as exp_err:
         self.update_state(
             state=states.FAILURE,
@@ -73,7 +93,7 @@ def scrape_data(self, single_page: bool = False) -> dict:
         )
         raise Ignore() from exp_err
 
-    return {"quotes": quote_status, "authors": author_status}
+    return task_status
 
 
 def scrape_quotes(self, single_page: bool) -> dict:

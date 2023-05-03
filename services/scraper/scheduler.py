@@ -14,7 +14,9 @@ def add_task(func: Callable, job_id: str) -> Callable:
 
     @wraps(func)
     def decorated_function(*args, **kwargs):  # pylint: disable=W0613
-        scheduled_task = ScheduledTask(jobId=job_id, description="scrape_data")
+        scheduled_task = ScheduledTask(
+            jobId=job_id, description="scheduled_scrape_data"
+        )
         scheduled_task.save()
         func.delay(task_id=str(scheduled_task.id))
 

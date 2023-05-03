@@ -8,6 +8,7 @@ from flask_pydantic import validate
 from database.models import Quote, Author
 from database.schemas import QuoteSchema, QuoteUpdateSchema
 from utils.utils import cursor_to_json, quote_aggregate_to_json
+from constants.app_constants import QUOTE_PER_PAGE
 
 
 class QuotesApi(Resource):
@@ -22,6 +23,7 @@ class QuotesApi(Resource):
         current_app.logger.info("GET Authors - REQUEST RECEIVED")
 
         tags = request.args.get("tags", None)
+        page = int(request.args.get("page", 1))
         if tags is not None:
             tags = tags.split(",")
             pipeline = [
@@ -60,7 +62,12 @@ class QuotesApi(Resource):
                 f"GET Quotes by tags {tags} - FETCHED {len(quotes)} Quotes"
             )
         else:
-            cursor = Quote.objects(author__exists=True).exclude("scrapedAuthor")
+            cursor = (
+                Quote.objects(author__exists=True)
+                .exclude("scrapedAuthor")
+                .paginate(page=page, per_page=QUOTE_PER_PAGE)
+                .items
+            )
             quotes = cursor_to_json(cursor)
             current_app.logger.info(f"GET Quotes - FETCHED {len(quotes)} Quotes")
 
@@ -173,5 +180,34 @@ class QuoteApi(Resource):
         except (DoesNotExist, ValidationError):
             response, status = {"Error": "Quote with given id Does Not Exist!"}, 404
             current_app.logger.error(f"GET Quote Id:{quote_id} - NOT FOUND")
+
+        return make_response(jsonify(response), status)
+
+
+class QuotePaginateApi(Resource):
+    """GET API for Quotes Pagination Info"""
+
+    def get(self, page: str):
+        """Get prev and next for a page
+
+        Args:
+            page (str): page number
+
+        Returns:
+            Response: JSON response
+        """
+        page = int(page)
+        try:
+            paginate = Quote.objects(author__exists=True).paginate(
+                page=page, per_page=QUOTE_PER_PAGE
+            )
+            response, status = {
+                "has_next": paginate.has_next,
+                "has_prev": paginate.has_prev,
+            }, 200
+            current_app.logger.info(f"GET Page:{page} - FETCHED")
+        except Exception as exp_err:
+            response, status = {"Error": str(exp_err)}, 404
+            current_app.logger.error(f"GET Page:{page} - {str(exp_err)}")
 
         return make_response(jsonify(response), status)

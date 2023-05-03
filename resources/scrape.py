@@ -1,12 +1,14 @@
 """All the Scrape API endpoints"""
 
-from flask import make_response, jsonify, current_app
+from flask import make_response, jsonify, current_app, request
 from flask_restful import Resource
 from celery import states
 from celery.result import AsyncResult
+from database.models import ScheduledTask
 from services.scraper.scraper import scrape_data
 from utils.celery_app import check_celery_available
 from utils.rate_limiter import limiter
+from utils.utils import cursor_to_json
 from constants.app_constants import SCRAPER_RATE_LIMIT
 
 
@@ -64,3 +66,25 @@ class ScrapeStatus(Resource):
 
         current_app.logger.info(f"GET Scrape Status - Status: {task_result.status}")
         return make_response(jsonify(result), 200)
+
+
+class ScraperTasks(Resource):
+    """Returns status of background task (scraping)"""
+
+    def get(self):
+        """Returns task status
+
+        Args:
+            task_id (str): id of the task to get status
+
+        Returns:
+            tuple: JSON and status code
+        """
+        current_app.logger.info("GET Scrape Tasks - REQUEST RECEIVED")
+
+        task_type = request.args.get("type", "scrape_data")
+        cursor = ScheduledTask.objects(description=task_type).order_by("-createdOn")
+        tasks = cursor_to_json(cursor)
+
+        current_app.logger.info(f"GET Scrape Tasks - FETCHED {len(tasks)} Tasks")
+        return make_response(jsonify(tasks), 200)

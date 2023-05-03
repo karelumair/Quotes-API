@@ -24,7 +24,7 @@ class StatsApi(Resource):
         """Get Statistics for Quotes, Authors and Tags"""
 
         try:
-            top_tags_query = get_query_most_popular("tags", 5)
+            top_tags_query = get_query_most_popular("tags", 10)
             tag_cursor = Quote.objects(author__exists=True).aggregate(top_tags_query)
             current_app.logger.info("GET Stats - FETCHED TOP Tags")
 
