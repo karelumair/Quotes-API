@@ -2,6 +2,7 @@
 
 from flask import make_response, jsonify, current_app, request
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required
 from celery import states
 from celery.result import AsyncResult
 from database.models import ScheduledTask
@@ -15,6 +16,7 @@ from constants.app_constants import SCRAPER_RATE_LIMIT
 class ScrapeDataApi(Resource):
     """API for Scraping Quotes"""
 
+    @jwt_required()
     @check_celery_available
     @limiter.limit(SCRAPER_RATE_LIMIT)
     def get(self):
@@ -43,6 +45,7 @@ class ScrapeDataApi(Resource):
 class ScrapeStatus(Resource):
     """Returns status of background task (scraping)"""
 
+    @jwt_required()
     def get(self, task_id: str):
         """Returns task status
 
@@ -71,6 +74,7 @@ class ScrapeStatus(Resource):
 class ScraperTasks(Resource):
     """Returns status of background task (scraping)"""
 
+    @jwt_required()
     def get(self):
         """Returns task status
 

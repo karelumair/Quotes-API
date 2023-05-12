@@ -2,7 +2,7 @@
 
 from typing import Optional
 from bson import ObjectId
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel
 
 
 class MongoObjectId(ObjectId):
@@ -28,6 +28,7 @@ class AuthorSchema(BaseModel):
     dob: str
     country: str
     description: str
+    password: str
 
 
 class AuthorUpdateSchema(BaseModel):
@@ -43,18 +44,18 @@ class QuoteSchema(BaseModel):
     """Pydantic Schema for Quote Model"""
 
     quote: str
-    author: Optional[MongoObjectId]
+    # author: Optional[MongoObjectId]
     scrapedAuthor: Optional[MongoObjectId]
     tags: list
 
-    @root_validator(pre=True)
-    @classmethod
-    def check_author_or_scraped_author(cls, values):
-        """Check if document contains either author or scrapedAuthor"""
+    # @root_validator(pre=True)
+    # @classmethod
+    # def check_author_or_scraped_author(cls, values):
+    #     """Check if document contains either author or scrapedAuthor"""
 
-        if not (values.get("author") or values.get("scrapedAuthor")):
-            raise ValueError("Quote must have either an author or scraped author")
-        return values
+    #     if not (values.get("author") or values.get("scrapedAuthor")):
+    #         raise ValueError("Quote must have either an author or scraped author")
+    #     return values
 
 
 class QuoteUpdateSchema(BaseModel):

@@ -10,9 +10,16 @@ from resources.quote import QuotesApi, QuoteApi, QuotePaginateApi
 from resources.author import AuthorsApi, AuthorApi
 from resources.scrape import ScrapeDataApi, ScrapeStatus, ScraperTasks
 from resources.stats import StatsApi
+from resources.authentication import (
+    AuthorLogin,
+    AuthorLogout,
+    TokenRefresh,
+    CurrentUser,
+)
 from utils.logger import init_logger
 from utils.celery_app import init_celery
 from utils.rate_limiter import init_limiter
+from utils.jwt_auth import init_jwt
 from services.scraper.scheduler import init_scheduler_jobs
 from config import CONFIG
 
@@ -29,6 +36,9 @@ def create_app(context: str = "main") -> Flask:
     CORS(app)
 
     app.config.update(CONFIG)
+
+    # Initialize JWT
+    init_jwt(app)
 
     # Initialize DB
     init_db(app)
@@ -49,6 +59,10 @@ def create_app(context: str = "main") -> Flask:
     api.add_resource(ScrapeDataApi, "/scrape/data/")
     api.add_resource(ScraperTasks, "/scrape/tasks/")
     api.add_resource(ScrapeStatus, "/scrape/tasks/<task_id>/")
+    api.add_resource(AuthorLogin, "/login/")
+    api.add_resource(AuthorLogout, "/logout/")
+    api.add_resource(CurrentUser, "/auth/")
+    api.add_resource(TokenRefresh, "/token/refresh/")
     api.add_resource(StatsApi, "/stats/")
 
     # Health check

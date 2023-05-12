@@ -10,7 +10,8 @@ class Author(db.Document):
     """Author Model"""
 
     name = db.StringField(required=True, unique=True)
-    dob = db.DateTimeField(required=True)
+    password = db.StringField(default="")
+    dob = db.DateField(required=True)
     country = db.StringField(required=True)
     description = db.StringField(required=True)
     scrapeId = db.ObjectIdField()
@@ -83,6 +84,22 @@ class ScheduledTask(db.Document):
     status = db.DictField(default=ScrapingTask().to_dict())
     createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {"collection": "scheduledTasks"}
+
+    def to_json(self, *args, **kwargs):
+        obj = self.to_mongo().to_dict()
+        obj["_id"] = str(obj["_id"])
+        return obj
+
+
+class LoginToken(db.Document):
+    """Login Token Model"""
+
+    author_id = db.ObjectIdField()
+    access = db.StringField(required=True)
+    refresh = db.StringField(required=True)
+    createdOn = db.DateTimeField(default=datetime.datetime.utcnow)
+    updatedOn = db.DateTimeField(default=datetime.datetime.utcnow)
+    meta = {"collection": "login_tokens"}
 
     def to_json(self, *args, **kwargs):
         obj = self.to_mongo().to_dict()

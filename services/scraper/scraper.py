@@ -118,7 +118,6 @@ def scrape_quotes(self, single_page: bool) -> dict:
     fetched_records = 0
 
     while next_page:
-
         for quote_div in driver.find_elements(By.CLASS_NAME, "quote"):
             quote = quote_div.find_element(By.CLASS_NAME, "text")
             # This removes html quotes (“ ”) to get only text of the quote.

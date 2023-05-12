@@ -5,6 +5,7 @@ from flask import Response, request, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
 from flask_pydantic import validate
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from database.models import Quote, Author
 from database.schemas import QuoteSchema, QuoteUpdateSchema
 from utils.utils import cursor_to_json, quote_aggregate_to_json
@@ -14,6 +15,7 @@ from constants.app_constants import QUOTE_PER_PAGE
 class QuotesApi(Resource):
     """GET and POST API for Quotes"""
 
+    @jwt_required()
     def get(self) -> Response:
         """Get all the Quotes
 
@@ -56,7 +58,11 @@ class QuotesApi(Resource):
                     }
                 },
             ]
-            cursor = Quote.objects(author__exists=True).aggregate(pipeline)
+            cursor = (
+                Quote.objects(author__exists=True)
+                .order_by("-createdOn")
+                .aggregate(pipeline)
+            )
             quotes = quote_aggregate_to_json(cursor)
             current_app.logger.info(
                 f"GET Quotes by tags {tags} - FETCHED {len(quotes)} Quotes"
@@ -64,6 +70,7 @@ class QuotesApi(Resource):
         else:
             cursor = (
                 Quote.objects(author__exists=True)
+                .order_by("-createdOn")
                 .exclude("scrapedAuthor")
                 .paginate(page=page, per_page=QUOTE_PER_PAGE)
                 .items
@@ -73,6 +80,7 @@ class QuotesApi(Resource):
 
         return make_response(jsonify(quotes), 200)
 
+    @jwt_required()
     @validate()
     def post(self, body: QuoteSchema) -> Response:
         """Create new Quote
@@ -83,10 +91,11 @@ class QuotesApi(Resource):
         current_app.logger.info("POST Quote - REQUEST RECEIVED")
 
         try:
+            author_id = get_jwt_identity()
             # Check if author exists else throw DoesNotExist exception
-            Author.objects.get(id=body.author)
+            Author.objects.get(id=author_id)
 
-            quote = Quote(**body.dict(), createdBy="author")
+            quote = Quote(**body.dict(), author=author_id, createdBy="author")
             quote.save()
 
             response, status = quote.to_json(), 201
@@ -107,6 +116,7 @@ class QuotesApi(Resource):
 class QuoteApi(Resource):
     """GET Detail, PUT, and DELETE API for Quotes"""
 
+    @jwt_required()
     @validate()
     def put(self, quote_id: str, body: QuoteUpdateSchema) -> Response:
         """Update single Quote with given id
@@ -120,7 +130,13 @@ class QuoteApi(Resource):
         current_app.logger.info(f"PUT Quote Id:{quote_id} - RECEIVED REQUEST")
 
         try:
-            Quote.objects.get(id=quote_id).update(
+            author_id = get_jwt_identity()
+            quote = Quote.objects.get(id=quote_id)
+
+            if author_id != str(quote.author.id):
+                return make_response(jsonify({"Error": "Not Authorized"}), 401)
+
+            quote.update(
                 **body.dict(exclude_unset=True),
                 updatedOn=datetime.now(timezone.utc),
                 updatedBy="author",
@@ -140,6 +156,7 @@ class QuoteApi(Resource):
 
         return make_response(jsonify(response), status)
 
+    @jwt_required()
     def delete(self, quote_id: str) -> Response:
         """Delete single Quote with given id
 
@@ -152,7 +169,12 @@ class QuoteApi(Resource):
         current_app.logger.info(f"DELETE Quote Id:{quote_id} - RECEIVED REQUEST")
 
         try:
+            author_id = get_jwt_identity()
             quote = Quote.objects.get(id=quote_id)
+
+            if author_id != str(quote.author.id):
+                return make_response(jsonify({"Error": "Not Authorized"}), 401)
+
             quote.delete()
             response, status = "", 204
             current_app.logger.info(f"DELETE Quote Id:{quote_id} - DELETED")
@@ -162,6 +184,7 @@ class QuoteApi(Resource):
 
         return make_response(jsonify(response), status)
 
+    @jwt_required()
     def get(self, quote_id: str) -> Response:
         """Get single Quote with given id
 
@@ -187,6 +210,7 @@ class QuoteApi(Resource):
 class QuotePaginateApi(Resource):
     """GET API for Quotes Pagination Info"""
 
+    @jwt_required()
     def get(self, page: str):
         """Get prev and next for a page
 

@@ -1,6 +1,7 @@
 """Contains all the configuration of the Flask App"""
 
 from os import environ
+from datetime import timedelta
 from pydantic import BaseSettings
 
 
@@ -21,6 +22,8 @@ class GlobalConfig(BaseSettings):
         "result_backend": environ.get("CELERY_RESULT_BACKEND"),
     }
     LIMITER_STORAGE_URI: str = environ.get("LIMITER_STORAGE_URI")
+    JWT_SECRET_KEY: str = environ.get("API_SECRET_KEY")
+    JWT_ACCESS_TOKEN_EXPIRES: timedelta = timedelta(days=1)
 
 
 class DevConfig(GlobalConfig):

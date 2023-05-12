@@ -1,10 +1,12 @@
 """All the Authors API endpoints"""
 
+import hashlib
 from datetime import datetime, timezone
 from flask import Response, jsonify, make_response, current_app
 from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from flask_restful import Resource
 from flask_pydantic import validate
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from database.models import Author
 from database.schemas import AuthorSchema, AuthorUpdateSchema
 from utils.utils import cursor_to_json
@@ -13,6 +15,7 @@ from utils.utils import cursor_to_json
 class AuthorsApi(Resource):
     """GET and POST API for Authors"""
 
+    @jwt_required()
     def get(self) -> Response:
         """Get all the Authors
 
@@ -21,7 +24,7 @@ class AuthorsApi(Resource):
         """
         current_app.logger.info("GET Authors - REQUEST RECEIVED")
 
-        cursor = Author.objects().exclude("scrapeId")
+        cursor = Author.objects().exclude("scrapeId", "password")
         authors = cursor_to_json(cursor)
 
         current_app.logger.info(f"GET Authors - FETCHED {len(authors)} Authors")
@@ -37,6 +40,7 @@ class AuthorsApi(Resource):
         current_app.logger.info("POST Author - REQUEST RECEIVED")
 
         try:
+            body.password = hashlib.sha256(body.password.encode("utf-8")).hexdigest()
             author = Author(**body.dict(), createdBy="author")
             author.save()
 
@@ -55,6 +59,7 @@ class AuthorsApi(Resource):
 class AuthorApi(Resource):
     """GET Detail, PUT, and DELETE API for Authors"""
 
+    @jwt_required()
     def get(self, author_id: str) -> Response:
         """Get single Author with given id
 
@@ -76,6 +81,7 @@ class AuthorApi(Resource):
 
         return make_response(jsonify(response), status)
 
+    @jwt_required()
     @validate()
     def put(self, author_id: str, body: AuthorUpdateSchema) -> Response:
         """Update single Author with given id
@@ -87,6 +93,9 @@ class AuthorApi(Resource):
             Response: JSON object of created Author
         """
         current_app.logger.info(f"PUT Author Id:{author_id} - RECEIVED REQUEST")
+
+        if get_jwt_identity() != author_id:
+            return make_response(jsonify({"Error": "Not Authorized"}), 401)
 
         try:
             Author.objects.get(id=author_id).update(
@@ -109,6 +118,7 @@ class AuthorApi(Resource):
 
         return make_response(jsonify(response), status)
 
+    @jwt_required()
     def delete(self, author_id: str) -> Response:
         """Delete single Author with given id
 
@@ -119,6 +129,9 @@ class AuthorApi(Resource):
             Response: Empty
         """
         current_app.logger.info(f"DELETE Author Id:{author_id} - RECEIVED REQUEST")
+
+        if get_jwt_identity() != author_id:
+            return make_response(jsonify({"Error": "Not Authorized"}), 401)
 
         try:
             author = Author.objects.get(id=author_id)

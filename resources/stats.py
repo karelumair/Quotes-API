@@ -2,6 +2,7 @@
 
 from flask import current_app, make_response, jsonify
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required
 from database.models import Quote, Author
 
 
@@ -20,6 +21,7 @@ def get_query_most_popular(field, top_n):
 class StatsApi(Resource):
     """All the Statistics API endpoints"""
 
+    @jwt_required()
     def get(self):
         """Get Statistics for Quotes, Authors and Tags"""
 
